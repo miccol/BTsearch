@@ -29,9 +29,28 @@ def main():
     bt = extend_condition(c,[action_open_door])
     #new_draw_tree(bt)
 
+
+
+
+
+def test():
+
     vrep = vrep_api()
+
+    youbot_vehicle_target_id = vrep.get_id(b'youBot_vehicleTargetPosition')
+    youbot_gripper_target_id = vrep.get_id(b'youBot_gripperPositionTarget')
+
+    green_cube_id = vrep.get_id(b'greenRectangle1')
+    goal_id = vrep.get_id(b'goalRegion')
+
+    cip = vrep.get_closest_inverse_pose(green_cube_id,youbot_vehicle_target_id)
+
+    vrep.set_pose(youbot_vehicle_target_id,-1,cip)
+
+    input('wait')
+    vrep.grasp_object(green_cube_id,youbot_gripper_target_id)
 
     vrep.close_connection()
 
 if __name__ == "__main__":
-    main()
+    test()
