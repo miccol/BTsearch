@@ -84,7 +84,7 @@ class BTWindow(xdot.DotWindow):
             for c in tree.Children:
                 code, new_alias = self.get_dot_for_tree(c)
                 dot_code += code
-                dot_code += tree.name + """ -> """ + new_alias + """; \n"""
+                dot_code += alias + """ -> """ + new_alias + """; \n"""
         return dot_code, alias
 
 
@@ -94,7 +94,7 @@ class BTWindow(xdot.DotWindow):
          """ + self.get_dot_for_tree(self.tree)[0] + """ } """ #finalization
 
 
-        #GLib.timeout_add(100, self.update_widget)
+        GLib.timeout_add(100, self.update_widget)
         self.node_names = []
         self.set_dotcode(self.dotcode)
         pass

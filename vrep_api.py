@@ -12,6 +12,8 @@ except:
 
 import numpy as np
 
+import time
+
 class vrep_api:
     def __init__(self):
         vrep.simxFinish(-1)  # just in case, close all opened connections
@@ -26,6 +28,8 @@ class vrep_api:
         self.youbot_ref_id = self.get_id(b'youBot_vehicleReference')
 
         self.gripper_id = self.get_id(b'youBot_gripperPositionTarget')
+
+        self.object_grasped_id = None
 
 
 
@@ -168,18 +172,23 @@ class vrep_api:
 
     def grasp_object(self,object_id):
 
+
+        time.sleep(2)
+
         self.set_position(self.gripper_id, object_id, [0,0,0])
-        input('wait')
+
+        time.sleep(2)
 
         self.close_gripper()
 
-        input('wait')
+        time.sleep(2)
 
         self.init_arm()
-
+        self.object_grasped_id = object_id
 
     def drop_object(self):
 
+        time.sleep(2)
 
         original_position = self.get_position(self.gripper_id,-1)
         new_position = original_position
@@ -187,13 +196,13 @@ class vrep_api:
         new_position[2] -= 0.1
 
         self.set_position(self.gripper_id,-1,new_position)
-        input('wait')
 
+        time.sleep(2)
         self.open_gripper()
-        input('wait')
+        time.sleep(2)
 
         self.init_arm()
-
+        self.object_grasped_id = None
 
 
 
@@ -215,4 +224,15 @@ class vrep_api:
         cip = self.get_closest_inverse_pose(object_id, self.youbot_vehicle_target_id, type)
         self.set_pose(self.youbot_vehicle_target_id, -1, cip)
 
+
+    def is_robot_close_2d(self,object_id, threshold):
+        position = self.get_position(object_id,self.youbot_ref_id)
+        print('distance: ',np.linalg.norm(position) )
+        return np.linalg.norm(position) < threshold
+
+
+    def are_objects_close(self,object_1_id,object_2_id,threshold):
+        position = self.get_position(object_1_id,object_2_id)
+
+        return np.linalg.norm(position) < threshold
 

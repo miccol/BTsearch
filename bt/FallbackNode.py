@@ -9,7 +9,7 @@ class FallbackNode(ControlNode):
         self.nodeType = 'Selector'
 
 
-    def Execute(self,args):
+    def Execute(self,args = None):
         #print 'Starting Children Threads'
         self.SetStatus(NodeStatus.Idle)
 
