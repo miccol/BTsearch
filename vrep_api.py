@@ -22,6 +22,11 @@ class vrep_api:
         else:
             print('Failed connecting to remote API server')
 
+        self.youbot_vehicle_target_id = self.get_id(b'youBot_vehicleTargetPosition')
+        self.youbot_ref_id = self.get_id(b'youBot_vehicleReference')
+
+        self.gripper_id = self.get_id(b'youBot_gripperPositionTarget')
+
 
 
     def get_id(self, name):
@@ -99,21 +104,20 @@ class vrep_api:
 
 
 
-
-    def get_inverse_position(self, position, dimension_id, type = 'cube'):
-        if type is not 'cube':
-            raise Exception('Cannot handle get_inverse_position for type', type)
-
-
-
     def get_closest_inverse_pose(self,object_id,ref_id,type = 'cube'):
+
+        if type is 'cube':
+            z_shift = -0.03
+        elif type is 'goal':
+            z_shift = 0
+
         distance = 10000000000
         closest_inverse_pose = None
         dummy_id = self.get_id(b'Disc0')
         shift = 0.3
 
         #shift in x
-        empty_position = [0,0,-0.03,0,0,0]
+        empty_position = [0,0,z_shift,0,0,0]
         empty_position[0] += shift
         self.set_pose(dummy_id,object_id,empty_position)
         self.set_orientation(dummy_id,object_id,[0,0,3.14/2])
@@ -124,7 +128,7 @@ class vrep_api:
             closest_inverse_pose = self.get_pose(dummy_id,-1)
             distance = dummy_distance
 
-        empty_position = [0,0,-0.03,0,0,0]
+        empty_position = [0,0,z_shift,0,0,0]
         empty_position[0] -= shift
 
         self.set_pose(dummy_id,object_id,empty_position)
@@ -158,25 +162,57 @@ class vrep_api:
             closest_inverse_pose = self.get_pose(dummy_id,-1)
             distance = dummy_distance
 
-
         return closest_inverse_pose
 
 
 
-    def grasp_object(self,object_id,gripper_id):
-        original_position = self.get_position(gripper_id,-1)
-        self.set_position(gripper_id, object_id, [0,0,0])
+    def grasp_object(self,object_id):
+
+        self.set_position(self.gripper_id, object_id, [0,0,0])
         input('wait')
 
+        self.close_gripper()
+
+        input('wait')
+
+        self.init_arm()
+
+
+    def drop_object(self):
+
+
+        original_position = self.get_position(self.gripper_id,-1)
+        new_position = original_position
+        new_position[1] += 0.1
+        new_position[2] -= 0.1
+
+        self.set_position(self.gripper_id,-1,new_position)
+        input('wait')
+
+        self.open_gripper()
+        input('wait')
+
+        self.init_arm()
+
+
+
+
+
+    def init_arm(self):
+
+        self.set_position(self.gripper_id,self.youbot_ref_id,[0,0.2,0.2])
+
+
+    def open_gripper(self):
+        vrep.simxSetIntegerSignal(self.clientID, b'gripperCommand', 1, vrep.simx_opmode_oneshot_wait)
+
+
+    def close_gripper(self):
         vrep.simxSetIntegerSignal(self.clientID, b'gripperCommand', 0, vrep.simx_opmode_oneshot_wait)
 
-        input('wait')
 
-        self.set_position(gripper_id,-1,original_position)
-
-
-
-
-
+    def move_close_to_object(self,object_id):
+        cip = self.get_closest_inverse_pose(object_id, self.youbot_vehicle_target_id)
+        self.set_pose(self.youbot_vehicle_target_id, -1, cip)
 
 

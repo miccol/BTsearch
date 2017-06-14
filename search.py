@@ -38,18 +38,21 @@ def test():
     vrep = vrep_api()
 
     youbot_vehicle_target_id = vrep.get_id(b'youBot_vehicleTargetPosition')
+    youbot_ref_id = vrep.get_id(b'youBot_vehicleReference')
+
     youbot_gripper_target_id = vrep.get_id(b'youBot_gripperPositionTarget')
 
     green_cube_id = vrep.get_id(b'greenRectangle1')
     goal_id = vrep.get_id(b'goalRegion')
 
-    cip = vrep.get_closest_inverse_pose(green_cube_id,youbot_vehicle_target_id)
 
-    vrep.set_pose(youbot_vehicle_target_id,-1,cip)
+    vrep.move_close_to_object(green_cube_id)
 
     input('wait')
-    vrep.grasp_object(green_cube_id,youbot_gripper_target_id)
+    vrep.grasp_object(green_cube_id)
+    input('wait')
 
+    vrep.drop_object()
     vrep.close_connection()
 
 if __name__ == "__main__":
