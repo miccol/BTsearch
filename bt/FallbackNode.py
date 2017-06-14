@@ -54,7 +54,7 @@ class FallbackNode(ControlNode):
 
 
                 elif c.GetStatus() == NodeStatus.Success:
-                    c.SetStatus(NodeStatus.Idle)
+                    #c.SetStatus(NodeStatus.Idle)
                     self.HaltChildren(i + 1)
                     self.SetStatus(NodeStatus.Success)
                     self.SetColor(NodeColor.Green)

@@ -51,7 +51,7 @@ class SequenceNode(ControlNode):
                             #time.sleep(0.1)
 
                 elif c.GetStatus() == NodeStatus.Failure:
-                    c.SetStatus(NodeStatus.Idle)
+                    #c.SetStatus(NodeStatus.Idle)
                     self.HaltChildren(i + 1)
                     self.SetStatus(NodeStatus.Failure)
                     self.SetColor(NodeColor.Red)

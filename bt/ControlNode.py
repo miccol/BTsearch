@@ -16,7 +16,7 @@ class ControlNode(TreeNode):
     def GetChildren(self):
         return self.Children
 
-    def GetChild(self,index,child):
+    def SetChild(self,index,child):
         self.Children[index] = child
 
 

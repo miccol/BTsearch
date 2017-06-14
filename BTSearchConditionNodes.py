@@ -29,9 +29,26 @@ class IsObjectGrasped(ConditionNode):
         self.object_id = object_id
 
     def Execute(self, args):
-
-
         if  self.vrep.object_grasped_id is self.object_id:
+            self.SetStatus(NodeStatus.Success)
+            self.SetColor(NodeColor.Green)
+        else:
+            print('Object Not grasped')
+            self.SetStatus(NodeStatus.Failure)
+            self.SetColor(NodeColor.Red)
+
+
+class IsObjectCloseTo(ConditionNode):
+    def __init__(self, name, object_1_id, object_2_id, vrep_api):
+        ConditionNode.__init__(self, name)
+        self.vrep = vrep_api
+        self.name = name
+        self.object_1_id = object_1_id
+        self.object_2_id = object_2_id
+
+    def Execute(self, args):
+
+        if self.vrep.are_objects_close(self.object_1_id, self.object_2_id,0.01):
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:

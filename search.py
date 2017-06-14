@@ -47,7 +47,7 @@ def test():
 
     move_close_to_tmpl = ActionTemplate('move_close_to_cube',['object'],[],['is_close_to_cube'])
 
-    drop_at_tmpl = ActionTemplate('drop_at',['object','p'],['is_grasped','is_close_to_pos'],['is_at'])
+    drop_at_tmpl = ActionTemplate('drop',['object','p'],['is_cube_grasped','is_close_to_goal'],['is_cube_close_to_goal'])
 
     grasp_tmpl = ActionTemplate('grasp',['object'],['is_close_to_cube'],['is_cube_grasped'])
 
@@ -68,10 +68,15 @@ def test():
     fallback_2 = FallbackNode('Fallback')
 
     is_close_to_cube = IsRobotCloseTo('is_close_to_cube',green_cube_id, vrep)
+    is_close_to_goal = IsRobotCloseTo('is_close_to_goal',goal_id, vrep)
+
     is_cube_grasped = IsObjectGrasped('is_cube_grasped',green_cube_id, vrep)
+    is_cube_close_to_goal = IsObjectCloseTo('is_cube_close_to_goal',green_cube_id, goal_id, vrep)
 
     move_to_cube = MoveCloseTo('move_close_to_cube',green_cube_id,vrep)
     grasp_cube = GraspObject('grasp',green_cube_id,vrep)
+    drop_cube = DropObject('drop',vrep)
+
 
     fallback_2.AddChild(is_close_to_cube)
     fallback_2.AddChild(move_to_cube)
@@ -81,7 +86,6 @@ def test():
 
     fallback_1.AddChild(is_cube_grasped)
     fallback_1.AddChild(sequence_1)
-    bt = is_cube_grasped
     #draw_thread = threading.Thread(target=new_draw_tree, args=(bt,))
     #draw_thread.start()
 
@@ -94,21 +98,26 @@ def test():
 
     all_action_nodes.append(move_to_cube)
     all_action_nodes.append(grasp_cube)
+    all_action_nodes.append(drop_cube)
 
     all_condition_nodes.append(is_close_to_cube)
     all_condition_nodes.append(is_cube_grasped)
+    all_condition_nodes.append(is_cube_close_to_goal)
+    all_condition_nodes.append(is_close_to_goal)
 
     search = SearchUtils(all_action_tmpls, all_action_nodes, all_condition_nodes)
 
 
+    bt = is_cube_close_to_goal
 
 
     while True:
         bt.Execute(None)
+        new_draw_tree(bt)
         if bt.GetStatus() is NodeStatus.Failure:
             input('ExpandingTree')
             bt = search.expand_tree(bt)
-            new_draw_tree(bt)
+
 
     # vrep.move_close_to_object(green_cube_id)
     #
