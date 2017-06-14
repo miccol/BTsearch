@@ -27,17 +27,26 @@ class ActionTemplate:
 
 def main():
     print('The program has started')
-    action_open_door = ActionTemplate('OpenDoor',['door'],['DoorClosed'],['DoorOpen'])
-    action_open_door.show()
-    c = ConditionTest('DoorOpen')
-    bt = extend_condition(c,[action_open_door])
-    #new_draw_tree(bt)
+    drop_cube_at = ActionTemplate('DropAt',['cube','p'],['is_cube_grasped','is_close_to_pos'],['is_cube_at'])
+    drop_cube_at.show()
+    c = ConditionTest('is_cube_at')
+    bt = extend_condition(c,[drop_cube_at])
+    new_draw_tree(bt)
 
 
 
 
 
 def test():
+
+
+
+
+
+    drop_cube_at = ActionTemplate('DropAt',['cube','p'],['is_cube_grasped','is_close_to_pos'],['is_cube_at'])
+
+    grasp_cube_tmpl = ActionTemplate('Grasp',['cube'],['is_hand_free','is_close_to_cube'],['is_cube_grasped'])
+
 
     vrep = vrep_api()
 
@@ -56,7 +65,7 @@ def test():
     fallback_2 = FallbackNode('Fallback')
 
     is_close_to_cube = IsRobotCloseTo('isCloseToCube',green_cube_id, vrep)
-    is_cube_grasped = IsObjectGrasped('isCubeGraspedToCube',green_cube_id, vrep)
+    is_cube_grasped = IsObjectGrasped('is_cube_grasped',green_cube_id, vrep)
 
     move_to_cube = MoveCloseTo('MoveCloseToCube',green_cube_id,vrep)
     grasp_cube = GraspObject('Grasp',green_cube_id,vrep)
@@ -69,12 +78,17 @@ def test():
 
     fallback_1.AddChild(is_cube_grasped)
     fallback_1.AddChild(sequence_1)
-    bt = fallback_1
-    draw_thread = threading.Thread(target=new_draw_tree, args=(bt,))
-    draw_thread.start()
+    bt = is_cube_grasped
+    #draw_thread = threading.Thread(target=new_draw_tree, args=(bt,))
+    #draw_thread.start()
 
     while True:
-        bt.Execute()
+        bt.Execute(None)
+        if bt.GetStatus() is NodeStatus.Failure:
+            input('ExpandingTree')
+            bt = expand_tree(bt,[grasp_cube_tmpl])
+            new_draw_tree(bt)
+
     # vrep.move_close_to_object(green_cube_id)
     #
     # input('wait')
@@ -92,4 +106,5 @@ def test():
     vrep.close_connection()
 
 if __name__ == "__main__":
+    #main()
     test()

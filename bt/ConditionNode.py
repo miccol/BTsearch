@@ -4,6 +4,8 @@ from LeafNode import LeafNode
 
 class ConditionNode(LeafNode):
     __metaclass__ = ABCMeta  # abstract class
-    def __init__(self, name):
-        LeafNode.__init__(self,name)
+    def __init__(self, name, param = ''):
+        LeafNode.__init__(self, name + '(' + param + ')')
         self.nodeType = 'Condition'
+        self.param = param
+        self.generic_name = name
