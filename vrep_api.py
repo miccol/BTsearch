@@ -211,8 +211,8 @@ class vrep_api:
         vrep.simxSetIntegerSignal(self.clientID, b'gripperCommand', 0, vrep.simx_opmode_oneshot_wait)
 
 
-    def move_close_to_object(self,object_id):
-        cip = self.get_closest_inverse_pose(object_id, self.youbot_vehicle_target_id)
+    def move_close_to_object(self,object_id, type='cube'):
+        cip = self.get_closest_inverse_pose(object_id, self.youbot_vehicle_target_id, type)
         self.set_pose(self.youbot_vehicle_target_id, -1, cip)
 
 

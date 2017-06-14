@@ -52,6 +52,9 @@ def test():
     vrep.grasp_object(green_cube_id)
     input('wait')
 
+    vrep.move_close_to_object(goal_id,'goal')
+
+
     vrep.drop_object()
     vrep.close_connection()
 
