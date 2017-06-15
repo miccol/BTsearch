@@ -6,8 +6,8 @@ import time
 class IsRobotCloseTo(ConditionNode):
     def __init__(self, name, fluent, vrep_api):
 
-        # for i in list(parameter_dict.keys()):
-        #     name = name + '_' + i
+        for i in list(fluent.parameters_dict.values()):
+            name = name + '_' + str(i)
 
         ConditionNode.__init__(self, name)
         self.vrep = vrep_api
@@ -26,15 +26,15 @@ class IsRobotCloseTo(ConditionNode):
 
 class IsObjectGrasped(ConditionNode):
     def __init__(self, name, fluent, vrep_api):
-        # for i in list(parameter_dict.keys()):
-        #     name = name + '_' + i
+        for i in list(fluent.parameters_dict.values()):
+            name = name + '_' + str(i)
         ConditionNode.__init__(self, name)
         self.vrep = vrep_api
         self.name = name
         self.fluent = fluent
 
     def Execute(self, args):
-        if  self.vrep.object_grasped_id is self.fluent.parameters_dict['object_grasped']:
+        if  self.vrep.object_grasped_id is self.fluent.parameters_dict['object']:
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:
@@ -45,8 +45,8 @@ class IsObjectGrasped(ConditionNode):
 
 class IsObjectAt(ConditionNode):
     def __init__(self, name, fluent, vrep_api):
-        # for i in list(parameter_dict.keys()):
-        #     name = name + '_' + i
+        for i in list(fluent.parameters_dict.values()):
+            name = name + '_' + str(i)
         ConditionNode.__init__(self, name)
         self.vrep = vrep_api
         self.name = name

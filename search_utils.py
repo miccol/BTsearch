@@ -23,20 +23,30 @@ class SearchUtils:
     def sample_action(self, name, fluent):
         for action in self.all_action_nodes:
             if action.generic_name is name:
-                action.fluent = fluent
-                return action
+                action.parameter_dict = fluent.parameters_dict
+                print('Sampling action', name, 'with fluent', str(fluent.parameters_dict))
+                return action, fluent.parameters_dict
         raise Exception('Cannot Sample Action', name)
 
-    def sample_fluent(self, fluent):
+    def sample_fluent(self, fluent, param = None):
 
         if fluent.type is 'is_robot_close_to':
-            print('FOUND: IsRobotCloseTo')
+            print('TRY: IsRobotCloseTo',str(param))
+            if param:
+                try:
+                    fluent.parameters_dict['to'] = param['at']
+                except:
+                    fluent.parameters_dict['to'] = param['object']
+            print('FOUND: IsRobotCloseTo',str(fluent.parameters_dict))
             return IsRobotCloseTo(fluent.name, fluent, self.vrep)
         elif fluent.type is 'is_object_at':
-            print('FOUND: IsObjectAt')
+            if param : fluent.parameters_dict['at'] = param['at']
+            print('FOUND: IsObjectAt',str(fluent.parameters_dict))
             return IsObjectAt(fluent.name, fluent, self.vrep)
         elif fluent.type is 'is_object_grasped':
-            print('FOUND: IsObjectGrasped')
+            print('TRY: IsObjectGrasped',str(param))
+            if param : fluent.parameters_dict['object'] = param['object']
+            print('FOUND: IsObjectGrasped',str(fluent.parameters_dict))
             return IsObjectGrasped(fluent.name, fluent, self.vrep)
 
         raise Exception('Cannot Sample fluent:', fluent.name)
@@ -56,9 +66,12 @@ class SearchUtils:
             if set(action.effects).issubset(set(condition.fluent.parameters_dict.keys())):
                 print('The action ', action.name, ' can hold ', condition.name)
                 bt = SequenceNode('seq')
+                new_action, new_fluent = self.sample_action(action.name,condition.fluent)
                 for c in action.conditions:
-                    bt.AddChild(self.sample_fluent(c))
-                bt.AddChild(self.sample_action(action.name,condition.fluent))
+                    bt.AddChild(self.sample_fluent(c,new_fluent))
+                bt.AddChild(new_action)
+        if len(bt.GetChildren()) is 1:
+            bt = bt.Children[0]
         return bt
 
     def extend_condition(self,condition):
@@ -70,16 +83,12 @@ class SearchUtils:
 
 
     def expand_tree(self,bt):
-        if bt.nodeType is 'Condition':
-            print('Condition status', bt.GetStatus())
-
         if bt.nodeType is 'Condition' and bt.GetStatus() is NodeStatus.Failure:
             print('found the condition to expand:', bt.name)
             return self.extend_condition(bt)
         elif bt.nodeType is 'Sequence':
             print('the node is a sequence', bt.name)
             for index,child in enumerate(bt.GetChildren()):
-                print('Expanding child:', child.name)
                 bt.SetChild(index,self.expand_tree(child))
         elif bt.nodeType is 'Selector':
             print('the node is a fallback', bt.name)
@@ -87,3 +96,7 @@ class SearchUtils:
                 self.expand_tree(child)
         return bt #no changes done to this specific node
 
+
+
+    def sample_tree(self,bt):
+        pass

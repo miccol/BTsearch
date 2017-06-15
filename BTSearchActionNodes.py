@@ -28,47 +28,51 @@ class ActionTest(ActionNode):
 
 class MoveCloseTo(ActionNode):
 
-    def __init__(self,name,parameter_dict, vrep_api):
-        for i in list(parameter_dict.keys()):
-            name = name + '_' + i
-        ActionNode.__init__(self,name)
-        self.vrep = vrep_api
-        self.name = name
-        self.parameter_dict = parameter_dict
-
-    def Execute(self,args):
-        self.SetStatus(NodeStatus.Running)
-        self.SetColor(NodeColor.Gray)
-        print('Executing Action', self.name)
-        self.vrep.move_close_to_object(self.parameter_dict['object'])
-        self.SetStatus(NodeStatus.Failure)
-        self.SetColor(NodeColor.Green)
-
-
-class GraspObject(ActionNode):
-
-    def __init__(self,name,parameter_dict, vrep_api):
+    def __init__(self,name,parameters_dict, vrep_api):
         # for i in list(parameter_dict.keys()):
         #     name = name + '_' + i
         ActionNode.__init__(self,name)
         self.vrep = vrep_api
         self.name = name
-        self.parameter_dict = parameter_dict
+        self.parameters_dict = parameters_dict
+        print('******************************************Creating Action', self.name)
+
+
+    def Execute(self,args):
+        print('******************************************Executing Action', self.name)
+        self.SetStatus(NodeStatus.Running)
+        self.SetColor(NodeColor.Gray)
+        print('Executing Action', self.name)
+        self.vrep.move_close_to_object(self.parameters_dict['object'])
+        self.SetStatus(NodeStatus.Success)
+        self.SetColor(NodeColor.Green)
+
+
+class GraspObject(ActionNode):
+
+    def __init__(self,name,parameters_dict, vrep_api):
+        # for i in list(parameter_dict.keys()):
+        #     name = name + '_' + i
+        ActionNode.__init__(self,name)
+        self.vrep = vrep_api
+        self.name = name
+        self.parameters_dict = parameters_dict
 
     def Execute(self,args):
         self.SetStatus(NodeStatus.Running)
         self.SetColor(NodeColor.Gray)
         print('Executing Action', self.name)
-        self.vrep.grasp_object(self.parameter_dict['object'])
+        self.vrep.grasp_object(self.parameters_dict['object'])
         self.SetStatus(NodeStatus.Success)
         self.SetColor(NodeColor.Green)
 
 class DropObject(ActionNode):
 
-    def __init__(self,name, vrep_api):
+    def __init__(self,name, parameters_dict, vrep_api):
         ActionNode.__init__(self,name)
         self.vrep = vrep_api
         self.name = name
+        self.parameters_dict = parameters_dict
 
     def Execute(self,args):
         self.SetStatus(NodeStatus.Running)

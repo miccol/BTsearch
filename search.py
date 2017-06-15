@@ -58,16 +58,16 @@ def test():
     all_condition_nodes = []
 
 
-    is_robot_close_to_fl = Fluent('is_robot_close_to','is_robot_close_to', {'robot': [], 'to': []})
-    is_grasped_fl = Fluent('is_object_grasped','is_object_grasped', {'object_grasped': []})
+    is_robot_close_to_fl = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
+    is_grasped_fl = Fluent('is_object_grasped','is_object_grasped', {'object': 0, 'hand':0})
 
 
 
-    move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[],[is_robot_close_to_fl], ConstraintOperativeSubspace(['object','robot'],['','']))
+    move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[],['robot','to'], ConstraintOperativeSubspace(['object','robot'],['','']))
 
     drop_at_tmpl = ActionTemplate('drop',['object','at'],[is_grasped_fl,is_robot_close_to_fl],['object','at'], ConstraintOperativeSubspace(['p','o'],['']))
 
-    grasp_tmpl = ActionTemplate('grasp',['object'],[is_robot_close_to_fl],['object_grasped'], ConstraintOperativeSubspace(['o'],['']))
+    grasp_tmpl = ActionTemplate('grasp',['object'],[is_robot_close_to_fl],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
 
     vrep = vrep_api()
 
@@ -85,27 +85,27 @@ def test():
     fallback_1 = FallbackNode('Fallback')
     fallback_2 = FallbackNode('Fallback')
 
-    is_close_to_cube = IsRobotCloseTo('is_close_to', {'object': green_cube_id}, vrep)
-    is_close_to_goal = IsRobotCloseTo('is_close_to', {'object': goal_id}, vrep)
+    # is_close_to_cube = IsRobotCloseTo('is_close_to', {'object': green_cube_id}, vrep)
+    # is_close_to_goal = IsRobotCloseTo('is_close_to', {'object': goal_id}, vrep)
+    #
+    # is_cube_grasped = IsObjectGrasped('is_grasped', {'object': green_cube_id}, vrep)
+    # is_cube_close_to_goal = IsObjectAt('is_object_close_to', {'object': green_cube_id, 'to': goal_id}, vrep)
 
-    is_cube_grasped = IsObjectGrasped('is_grasped', {'object': green_cube_id}, vrep)
-    is_cube_close_to_goal = IsObjectAt('is_object_close_to', {'object': green_cube_id, 'to': goal_id}, vrep)
 
-
-
+    #
     move_to_cube = MoveCloseTo('move_close_to', {'object': green_cube_id}, vrep)
     grasp_cube = GraspObject('grasp', {'object':green_cube_id}, vrep)
-    drop_cube = DropObject('drop',vrep)
+    drop_cube = DropObject('drop',{'object':green_cube_id,'at':goal_id},vrep)
 
-
-    fallback_2.AddChild(is_close_to_cube)
-    fallback_2.AddChild(move_to_cube)
-
-    sequence_1.AddChild(fallback_2)
-    sequence_1.AddChild(grasp_cube)
-
-    fallback_1.AddChild(is_cube_grasped)
-    fallback_1.AddChild(sequence_1)
+    #
+    # fallback_2.AddChild(is_close_to_cube)
+    # fallback_2.AddChild(move_to_cube)
+    #
+    # sequence_1.AddChild(fallback_2)
+    # sequence_1.AddChild(grasp_cube)
+    #
+    # fallback_1.AddChild(is_cube_grasped)
+    # fallback_1.AddChild(sequence_1)
     #draw_thread = threading.Thread(target=new_draw_tree, args=(bt,))
     #draw_thread.start()
 
@@ -119,11 +119,11 @@ def test():
     all_action_nodes.append(move_to_cube)
     all_action_nodes.append(grasp_cube)
     all_action_nodes.append(drop_cube)
-
-    all_condition_nodes.append(is_close_to_cube)
-    all_condition_nodes.append(is_cube_grasped)
-    all_condition_nodes.append(is_cube_close_to_goal)
-    all_condition_nodes.append(is_close_to_goal)
+    #
+    # all_condition_nodes.append(is_close_to_cube)
+    # all_condition_nodes.append(is_cube_grasped)
+    # all_condition_nodes.append(is_cube_close_to_goal)
+    # all_condition_nodes.append(is_close_to_goal)
 
     search = SearchUtils(all_action_tmpls, all_action_nodes, all_condition_nodes, vrep)
 
@@ -134,12 +134,15 @@ def test():
     bt = search.sample_fluent(is_cube_at_goal_fl)
 
 
+
     while True:
-        new_draw_tree(bt)
+        bt.Halt()
         bt.Execute(None)
+        # new_draw_tree(bt)
         if bt.GetStatus() is NodeStatus.Failure:
             input('ExpandingTree')
             bt = search.expand_tree(bt)
+            bt.Halt()
 
 
     # vrep.move_close_to_object(green_cube_id)
