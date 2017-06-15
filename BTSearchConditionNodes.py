@@ -4,16 +4,19 @@ import time
 
 
 class IsRobotCloseTo(ConditionNode):
-    def __init__(self, name, object_id, vrep_api):
+    def __init__(self, name, fluent, vrep_api):
+
+        # for i in list(parameter_dict.keys()):
+        #     name = name + '_' + i
+
         ConditionNode.__init__(self, name)
         self.vrep = vrep_api
         self.name = name
-        self.object_id = object_id
+        self.fluent = fluent
 
     def Execute(self, args):
 
-
-        if self.vrep.is_robot_close_2d(self.object_id, 0.32):
+        if self.vrep.is_robot_close_2d(self.fluent.parameters_dict['to'], 0.32):
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:
@@ -22,14 +25,16 @@ class IsRobotCloseTo(ConditionNode):
 
 
 class IsObjectGrasped(ConditionNode):
-    def __init__(self, name, object_id, vrep_api):
+    def __init__(self, name, fluent, vrep_api):
+        # for i in list(parameter_dict.keys()):
+        #     name = name + '_' + i
         ConditionNode.__init__(self, name)
         self.vrep = vrep_api
         self.name = name
-        self.object_id = object_id
+        self.fluent = fluent
 
     def Execute(self, args):
-        if  self.vrep.object_grasped_id is self.object_id:
+        if  self.vrep.object_grasped_id is self.fluent.parameters_dict['object_grasped']:
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:
@@ -38,17 +43,18 @@ class IsObjectGrasped(ConditionNode):
             self.SetColor(NodeColor.Red)
 
 
-class IsObjectCloseTo(ConditionNode):
-    def __init__(self, name, object_1_id, object_2_id, vrep_api):
+class IsObjectAt(ConditionNode):
+    def __init__(self, name, fluent, vrep_api):
+        # for i in list(parameter_dict.keys()):
+        #     name = name + '_' + i
         ConditionNode.__init__(self, name)
         self.vrep = vrep_api
         self.name = name
-        self.object_1_id = object_1_id
-        self.object_2_id = object_2_id
+        self.fluent = fluent
 
     def Execute(self, args):
 
-        if self.vrep.are_objects_close(self.object_1_id, self.object_2_id,0.01):
+        if self.vrep.are_objects_close(self.fluent.parameters_dict['object'], self.fluent.parameters_dict['at'],0.01):
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:

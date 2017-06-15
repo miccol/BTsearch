@@ -6,20 +6,42 @@ from SequenceNode import SequenceNode
 from FallbackNode import FallbackNode
 from ActionTest import ActionTest
 from ConditionTest import ConditionTest
+from BTSearchActionNodes import *
+from BTSearchConditionNodes import *
+
 
 
 
 class SearchUtils:
-    def __init__(self, all_action_templates, all_action_nodes, all_condition_nodes):
+    def __init__(self, all_action_templates, all_action_nodes, all_condition_nodes, vrep_api):
         self.all_action_templates = all_action_templates
         self.all_action_nodes = all_action_nodes
         self.all_condition_nodes = all_condition_nodes
+        self.vrep = vrep_api
 
-    def sample_action(self, name):
+
+    def sample_action(self, name, fluent):
         for action in self.all_action_nodes:
             if action.generic_name is name:
+                action.fluent = fluent
                 return action
         raise Exception('Cannot Sample Action', name)
+
+    def sample_fluent(self, fluent):
+
+        if fluent.type is 'is_robot_close_to':
+            print('FOUND: IsRobotCloseTo')
+            return IsRobotCloseTo(fluent.name, fluent, self.vrep)
+        elif fluent.type is 'is_object_at':
+            print('FOUND: IsObjectAt')
+            return IsObjectAt(fluent.name, fluent, self.vrep)
+        elif fluent.type is 'is_object_grasped':
+            print('FOUND: IsObjectGrasped')
+            return IsObjectGrasped(fluent.name, fluent, self.vrep)
+
+        raise Exception('Cannot Sample fluent:', fluent.name)
+
+
 
     def sample_condition(self, name):
         for condition in self.all_condition_nodes:
@@ -30,18 +52,19 @@ class SearchUtils:
     def get_subtree_for(self,condition):
         bt = None
         for action in self.all_action_templates:
-            if condition in action.effects:
-                print('The action ', action.name, ' can hold ', condition)
+            print('Trying with action', action.name, 'Effects', action.effects, 'Condition fluents', condition.fluent.parameters_dict.keys())
+            if set(action.effects).issubset(set(condition.fluent.parameters_dict.keys())):
+                print('The action ', action.name, ' can hold ', condition.name)
                 bt = SequenceNode('seq')
                 for c in action.conditions:
-                    bt.AddChild(self.sample_condition(c))
-                bt.AddChild(self.sample_action(action.name))
+                    bt.AddChild(self.sample_fluent(c))
+                bt.AddChild(self.sample_action(action.name,condition.fluent))
         return bt
 
     def extend_condition(self,condition):
         bt = FallbackNode('Fallback')
         bt.AddChild(condition)
-        bt.AddChild(self.get_subtree_for(condition.name))
+        bt.AddChild(self.get_subtree_for(condition))
 
         return bt
 
