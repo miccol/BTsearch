@@ -13,13 +13,21 @@ class IsRobotCloseTo(ConditionNode):
         self.vrep = vrep_api
         self.name = name
         self.fluent = fluent
+        self.to = self.fluent.parameters_dict['to']
+        print("++++++++++++++++creating condition",self.name, 'params:', self.fluent.parameters_dict)
 
     def Execute(self, args):
+        print("++++++++++++++++executiong condition", self.name)
 
         if self.vrep.is_robot_close_2d(self.fluent.parameters_dict['to'], 0.32):
+            print("++++++++++++++++the robot is close to", self.fluent.parameters_dict['to'] )
+            print("++++++++++++++++param", self.fluent.parameters_dict )
+
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:
+            print("++++++++++++++++the robot is NOT close to", self.fluent.parameters_dict['to'] )
+
             self.SetStatus(NodeStatus.Failure)
             self.SetColor(NodeColor.Red)
 

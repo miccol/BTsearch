@@ -43,8 +43,8 @@ class MoveCloseTo(ActionNode):
         self.SetStatus(NodeStatus.Running)
         self.SetColor(NodeColor.Gray)
         print('Executing Action', self.name)
-        self.vrep.move_close_to_object(self.parameters_dict['object'])
-        self.SetStatus(NodeStatus.Success)
+        self.vrep.move_close_to_object(self.parameters_dict['to'])
+        self.SetStatus(NodeStatus.Failure)
         self.SetColor(NodeColor.Green)
 
 
@@ -78,6 +78,6 @@ class DropObject(ActionNode):
         self.SetStatus(NodeStatus.Running)
         self.SetColor(NodeColor.Gray)
         print('Executing Action', self.name)
-        self.vrep.drop_object(self)
+        self.vrep.drop_object()
         self.SetStatus(NodeStatus.Success)
         self.SetColor(NodeColor.Green)

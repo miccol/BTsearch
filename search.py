@@ -21,6 +21,16 @@ class Fluent():
         self.name = name
         self.type = type
 
+    def __copy__(self):
+        cls = self.__class__
+        newobject = cls.__new__(cls)
+        newobject.__dict__.update(self.__dict__)
+        newobject.parameters_dict = self.parameters_dict
+        newobject.name = self.name
+        newobject.type = self.type
+        return newobject
+
+
 class ActionTemplate:
     def __init__(self,name,parameters,conditions,effects,cos):
         self.name = name
@@ -133,12 +143,12 @@ def test():
 
     bt = search.sample_fluent(is_cube_at_goal_fl)
 
-
-
+    # draw_thread = threading.Thread(target=new_draw_tree, args=(bt,))
+    # draw_thread.start()
     while True:
         bt.Halt()
         bt.Execute(None)
-        # new_draw_tree(bt)
+        new_draw_tree(bt)
         if bt.GetStatus() is NodeStatus.Failure:
             input('ExpandingTree')
             bt = search.expand_tree(bt)
