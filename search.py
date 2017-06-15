@@ -143,32 +143,21 @@ def test():
 
     bt = search.sample_fluent(is_cube_at_goal_fl)
 
-    # draw_thread = threading.Thread(target=new_draw_tree, args=(bt,))
-    # draw_thread.start()
+    root = SequenceNode('root')
+    root.AddChild(bt)
+    draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
+    draw_thread.start()
+
     while True:
         bt.Halt()
         bt.Execute(None)
-        new_draw_tree(bt)
+        # new_draw_tree(bt)
         if bt.GetStatus() is NodeStatus.Failure:
-            input('ExpandingTree')
             bt = search.expand_tree(bt)
+            root.SetChild(0,bt)
             bt.Halt()
 
 
-    # vrep.move_close_to_object(green_cube_id)
-    #
-    # input('wait')
-    # vrep.grasp_object(green_cube_id)
-    # input('wait')
-    #
-    # vrep.move_close_to_object(goal_id,'goal')
-    #
-    # while not vrep.is_robot_close_2d(goal_id,0.3):
-    #     print('robot still fall from goal')
-    #
-    #
-    # print('robot close to goal')
-    vrep.drop_object()
     vrep.close_connection()
 
 if __name__ == "__main__":
