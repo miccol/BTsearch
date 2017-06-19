@@ -19,6 +19,8 @@ class ControlNode(TreeNode):
     def SetChild(self,index,child):
         self.Children[index] = child
 
+    def ReverseChildren(self):
+        self.Children.reverse()
 
     def HaltChildren(self,h):
         i = 0

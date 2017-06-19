@@ -9,6 +9,7 @@ from search_utils import *
 from vrep_api import vrep_api
 import threading
 
+import uuid
 
 
 class Sample:
@@ -32,6 +33,8 @@ class Fluent:
         self.type = type
         self.nodeType = 'Condition'
         self.nodeClass = 'Leaf'
+        self.uuid = uuid.uuid4()
+        print('Fluent name:', self.name,'Fluent id:', self.uuid)
 
     def GetColor(self):
         return NodeColor.Black
@@ -120,7 +123,19 @@ def test():
 
     new_draw_tree(sampled_bt)
 
-    new_draw_tree(search.get_abstract_subtree_for(abstract_bt))
+    new_abs_tree = search.extend_fluent(abstract_bt)
+    new_draw_tree(new_abs_tree)
+    sampled_bt = search.sample_tree(new_abs_tree,{'object': green_cube_id, 'at': goal_id})
+    new_draw_tree(sampled_bt)
+    sampled_bt.Halt()
+    sampled_bt.Execute(None)
+    id, not_used =  search.get_failed_fluent_id(sampled_bt, 0)
+    print('********************ID:', id)
+    new_draw_tree(new_abs_tree)
+    new_abs_tree = search.expand_abstract_tree(new_abs_tree, id)
+    new_draw_tree(new_abs_tree)
+
+
     return
     root = SequenceNode('root')
     root.AddChild(bt)

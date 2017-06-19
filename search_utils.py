@@ -12,7 +12,6 @@ from search import Fluent
 
 import copy
 
-
 class SearchUtils:
     def __init__(self, all_action_templates, vrep_api):
         self.all_action_templates = all_action_templates
@@ -47,6 +46,8 @@ class SearchUtils:
             raise Exception('Cannot Sample Action', name)
 
         return action, fluent.parameters_dict
+
+
 
     def sample_fluent(self, fluent, param = None):
         print('FLUENT', str(fluent.parameters_dict))
@@ -123,6 +124,36 @@ class SearchUtils:
         return bt
 
 
+    def extend_fluent(self,fluent):
+        bt = FallbackNode('Fallback')
+        bt.AddChild(fluent)
+        bt.AddChild(self.get_abstract_subtree_for(fluent))
+
+        return bt
+
+    def get_failed_fluent_id(self,bt, idx = 0):
+        if bt.nodeClass is not 'Leaf':
+            #search for fluent id
+            new_idx = idx
+            is_failed = False
+            for child in bt.GetChildren():
+                new_idx, is_failed = self.get_failed_fluent_id(child, new_idx)
+                if is_failed:
+                    print('Failing fluent found: ',new_idx)
+                    return new_idx, True
+            if not is_failed:
+                return new_idx + 1, False
+
+        else:
+            if bt.nodeType is 'Condition' and bt.GetStatus() is NodeStatus.Failure:
+                print('ID FOUNDDDDDDDDDDDDDDDDDD:', idx, 'name:', bt.name)
+                return idx + 1, True
+            else:
+                return idx + 1, False
+
+
+
+
     def expand_tree(self,bt):
         if bt.nodeType is 'Condition' and bt.GetStatus() is NodeStatus.Failure:
             print('found the condition to expand:', bt.name)
@@ -138,6 +169,45 @@ class SearchUtils:
         return bt #no changes done to this specific node
 
 
+    def expand_abstract_tree(self,bt, id):
+        print('Trying with: ', bt.name)
+        if bt.nodeType is 'Condition':
+            print('Trying with ID: ', bt.uuid)
+
+        if bt.nodeType is 'Condition' and bt.uuid == id:
+            print('found the fluent to expand:', bt.name)
+            return self.extend_fluent(bt)
+        elif bt.nodeType is 'Sequence':
+            print('the node is a sequence', bt.name)
+            for index,child in enumerate(bt.GetChildren()):
+                bt.SetChild(index,self.expand_abstract_tree(child, id))
+        elif bt.nodeType is 'Selector':
+            print('the node is a fallback', bt.name)
+            for index,child in enumerate(bt.GetChildren()):
+                self.expand_abstract_tree(child, id)
+        return bt #no changes done to this specific node
+
+
+
+    # def expand_abstract_tree(self,bt, id):
+    #     print('Trying with: ', bt.name)
+    #     if bt.nodeType is 'Condition':
+    #         print('Trying with ID: ', bt.uuid)
+    #
+    #     if bt.nodeType is 'Condition' and bt.uuid == id:
+    #         print('found the fluent to expand:', bt.name)
+    #         return self.extend_fluent(bt)
+    #     elif bt.nodeType is 'Sequence':
+    #         print('the node is a sequence', bt.name)
+    #         for index,child in enumerate(bt.GetChildren()):
+    #             bt.SetChild(index,self.expand_abstract_tree(child, id))
+    #     elif bt.nodeType is 'Selector':
+    #         print('the node is a fallback', bt.name)
+    #         for index,child in enumerate(bt.GetChildren()):
+    #             self.expand_abstract_tree(child, id)
+    #     return bt #no changes done to this specific node
+
+
 
     def get_reachability_graph(self,abstract_tree):
         pass
@@ -146,24 +216,26 @@ class SearchUtils:
         pass
 
     def sample_tree(self,abstract_tree, sample):
-        if abstract_tree.__class__.__name__ is 'Fluent':
-            return self.sample_fluent(abstract_tree,sample)
+        sampled_tree = copy.deepcopy(abstract_tree)
+        if sampled_tree.__class__.__name__ is 'Fluent':
+            return self.sample_fluent(sampled_tree,sample)
 
-        elif abstract_tree.__class__.__name__ is 'ActionTemplate':
-            return self.sample_action(abstract_tree,sample)
+        elif sampled_tree.__class__.__name__ is 'ActionTemplate':
+            return self.sample_action_template(sampled_tree,sample)
         else:
             #reverse if this is a sequence composition
-            if abstract_tree.nodeType is 'Sequence':
-                reverse_list_of_children = abstract_tree.GetChildren()[::-1]
-                for index,child in enumerate(reverse_list_of_children):
+            if sampled_tree.nodeType is 'Sequence':
+                sampled_tree.ReverseChildren()
+                for index,child in enumerate( sampled_tree.GetChildren()):
                     sampled_child = self.sample_tree(child, sample)
-                    abstract_tree.SetChild(index,sampled_child)
+                    sampled_tree.SetChild(index,sampled_child)
+                    sampled_tree.ReverseChildren()
 
             else:
-                for index,child in enumerate(abstract_tree.GetChildren()):
+                for index,child in enumerate(sampled_tree.GetChildren()):
                     sampled_child = self.sample_tree(child, sample)
-                    abstract_tree.SetChild(index,sampled_child)
-            return abstract_tree
+                    sampled_tree.SetChild(index,sampled_child)
+            return sampled_tree
 
 
 
