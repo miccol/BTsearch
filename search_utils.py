@@ -14,11 +14,24 @@ import copy
 
 
 class SearchUtils:
-    def __init__(self, all_action_templates, all_action_nodes, all_condition_nodes, vrep_api):
+    def __init__(self, all_action_templates, vrep_api):
         self.all_action_templates = all_action_templates
-        self.all_action_nodes = all_action_nodes
-        self.all_condition_nodes = all_condition_nodes
         self.vrep = vrep_api
+
+
+    def sample_action_template(self, action_tmpl, parameters_dict):
+
+        action = None
+        if action_tmpl.name is 'move_close_to':
+            action = MoveCloseTo('move_close_to_'+str(parameters_dict['to']), parameters_dict, self.vrep)
+        elif action_tmpl.name is 'grasp':
+            action = GraspObject('grasp_'+str(parameters_dict['object']), parameters_dict, self.vrep)
+        elif action_tmpl.name is 'drop':
+            action = DropObject('drop_at_'+str(parameters_dict['at']), parameters_dict, self.vrep)
+        else:
+            raise Exception('Cannot Sample Action Template ', action_tmpl.name)
+
+        return action
 
 
     def sample_action(self, name, fluent):
@@ -68,15 +81,9 @@ class SearchUtils:
             new_fluent = Fluent(fluent.name,fluent.type, parameters)
             return IsObjectGrasped(new_fluent.name, new_fluent, self.vrep)
 
-        raise Exception('Cannot Sample fluent:', luent.name)
+        raise Exception('Cannot Sample fluent:', fluent.name)
 
 
-
-    def sample_condition(self, name):
-        for condition in self.all_condition_nodes:
-            if condition.generic_name is name:
-                return condition
-        raise Exception('Cannot Sample Condition', name)
 
     def get_subtree_for(self,condition):
         bt = None
@@ -89,6 +96,21 @@ class SearchUtils:
                 for c in action.conditions:
                     bt.AddChild(self.sample_fluent(c,new_fluent))
                 bt.AddChild(new_action)
+        if len(bt.GetChildren()) is 1:
+            bt = bt.Children[0]
+        return bt
+
+
+    def get_abstract_subtree_for(self,fluent):
+        bt = None
+        for action in self.all_action_templates:
+            print('Trying with action', action.name, 'Effects', action.effects, 'Condition fluents', fluent.parameters_dict.keys())
+            if set(action.effects).issubset(set(fluent.parameters_dict.keys())):
+                print('The action ', action.name, ' can hold ', fluent.name)
+                bt = SequenceNode('seq')
+                for c in action.conditions:
+                    bt.AddChild(c)
+                bt.AddChild(action)
         if len(bt.GetChildren()) is 1:
             bt = bt.Children[0]
         return bt
@@ -117,5 +139,32 @@ class SearchUtils:
 
 
 
-    def sample_tree(self,bt):
+    def get_reachability_graph(self,abstract_tree):
         pass
+
+    def sample_reachability_graph(self,rg):
+        pass
+
+    def sample_tree(self,abstract_tree, sample):
+        if abstract_tree.__class__.__name__ is 'Fluent':
+            return self.sample_fluent(abstract_tree,sample)
+
+        elif abstract_tree.__class__.__name__ is 'ActionTemplate':
+            return self.sample_action(abstract_tree,sample)
+        else:
+            #reverse if this is a sequence composition
+            if abstract_tree.nodeType is 'Sequence':
+                reverse_list_of_children = abstract_tree.GetChildren()[::-1]
+                for index,child in enumerate(reverse_list_of_children):
+                    sampled_child = self.sample_tree(child, sample)
+                    abstract_tree.SetChild(index,sampled_child)
+
+            else:
+                for index,child in enumerate(abstract_tree.GetChildren()):
+                    sampled_child = self.sample_tree(child, sample)
+                    abstract_tree.SetChild(index,sampled_child)
+            return abstract_tree
+
+
+
+

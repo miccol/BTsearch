@@ -10,16 +10,31 @@ from vrep_api import vrep_api
 import threading
 
 
-class ConstraintOperativeSubspace():
+
+class Sample:
+    def __init__(self):
+        self.robot_position
+        self.object_position
+        self.position
+        self.hand
+        self.boolean
+
+
+class ConstraintOperativeSubspace:
     def __init__(self, variables, constraints):
         self.variables = variables
         self.constraints = constraints
 
-class Fluent():
+class Fluent:
     def __init__(self, name, type, parameters_dict):
         self.parameters_dict = parameters_dict
         self.name = name
         self.type = type
+        self.nodeType = 'Condition'
+        self.nodeClass = 'Leaf'
+
+    def GetColor(self):
+        return NodeColor.Black
 
     def __copy__(self):
         cls = self.__class__
@@ -40,7 +55,12 @@ class ActionTemplate:
         self.conditions = conditions #list
         self.effects = effects #list
         self.cos = cos
+        self.nodeType = 'Action'
+        self.nodeClass = 'Leaf'
 
+
+    def GetColor(self):
+        return NodeColor.Black
     def show(self):
         print('Name: ', self.name)
         print('Parameters: ', self.parameters)
@@ -62,87 +82,46 @@ def main():
 def test():
 
 
-
+    #definition of action templates
     all_action_tmpls = []
-    all_action_nodes = []
-    all_condition_nodes = []
 
-
+    #fluents
     is_robot_close_to_fl = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
     is_grasped_fl = Fluent('is_object_grasped','is_object_grasped', {'object': 0, 'hand':0})
 
 
 
     move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[],['robot','to'], ConstraintOperativeSubspace(['object','robot'],['','']))
-
     drop_at_tmpl = ActionTemplate('drop',['object','at'],[is_grasped_fl,is_robot_close_to_fl],['object','at'], ConstraintOperativeSubspace(['p','o'],['']))
-
     grasp_tmpl = ActionTemplate('grasp',['object'],[is_robot_close_to_fl],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
-
-    vrep = vrep_api()
-
-    youbot_vehicle_target_id = vrep.get_id(b'youBot_vehicleTargetPosition')
-    youbot_ref_id = vrep.get_id(b'youBot_vehicleReference')
-
-    youbot_gripper_target_id = vrep.get_id(b'youBot_gripperPositionTarget')
-
-    green_cube_id = vrep.get_id(b'greenRectangle1')
-    goal_id = vrep.get_id(b'goalRegion')
-
-
-    vrep.open_gripper()
-    sequence_1 = SequenceNode('Sequence')
-    fallback_1 = FallbackNode('Fallback')
-    fallback_2 = FallbackNode('Fallback')
-
-    # is_close_to_cube = IsRobotCloseTo('is_close_to', {'object': green_cube_id}, vrep)
-    # is_close_to_goal = IsRobotCloseTo('is_close_to', {'object': goal_id}, vrep)
-    #
-    # is_cube_grasped = IsObjectGrasped('is_grasped', {'object': green_cube_id}, vrep)
-    # is_cube_close_to_goal = IsObjectAt('is_object_close_to', {'object': green_cube_id, 'to': goal_id}, vrep)
-
-
-    #
-    move_to_cube = MoveCloseTo('move_close_to', {'object': green_cube_id}, vrep)
-    grasp_cube = GraspObject('grasp', {'object':green_cube_id}, vrep)
-    drop_cube = DropObject('drop',{'object':green_cube_id,'at':goal_id},vrep)
-
-    #
-    # fallback_2.AddChild(is_close_to_cube)
-    # fallback_2.AddChild(move_to_cube)
-    #
-    # sequence_1.AddChild(fallback_2)
-    # sequence_1.AddChild(grasp_cube)
-    #
-    # fallback_1.AddChild(is_cube_grasped)
-    # fallback_1.AddChild(sequence_1)
-    #draw_thread = threading.Thread(target=new_draw_tree, args=(bt,))
-    #draw_thread.start()
-
-
 
 
     all_action_tmpls.append(move_close_to_tmpl)
     all_action_tmpls.append(drop_at_tmpl)
     all_action_tmpls.append(grasp_tmpl)
 
-    all_action_nodes.append(move_to_cube)
-    all_action_nodes.append(grasp_cube)
-    all_action_nodes.append(drop_cube)
-    #
-    # all_condition_nodes.append(is_close_to_cube)
-    # all_condition_nodes.append(is_cube_grasped)
-    # all_condition_nodes.append(is_cube_close_to_goal)
-    # all_condition_nodes.append(is_close_to_goal)
+    vrep = vrep_api()
 
-    search = SearchUtils(all_action_tmpls, all_action_nodes, all_condition_nodes, vrep)
+    green_cube_id = vrep.get_id(b'greenRectangle1')
+    goal_id = vrep.get_id(b'goalRegion')
+
+    vrep.open_gripper()
+
+
+    search = SearchUtils(all_action_tmpls, vrep)
 
 
     is_cube_at_goal_fl = Fluent('is_cube_at_goal','is_object_at', {'object': green_cube_id, 'at': goal_id})
 
-
+    abstract_bt = is_cube_at_goal_fl
     bt = search.sample_fluent(is_cube_at_goal_fl)
 
+    sampled_bt = search.sample_tree(is_cube_at_goal_fl, {'object': green_cube_id, 'at': goal_id})
+
+    new_draw_tree(sampled_bt)
+
+    new_draw_tree(search.get_abstract_subtree_for(abstract_bt))
+    return
     root = SequenceNode('root')
     root.AddChild(bt)
     draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
