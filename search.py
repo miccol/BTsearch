@@ -176,7 +176,7 @@ def test():
         print('Ticking the Tree')
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
-            input("-----------------Extending the Tree-----------------")
+            # input("-----------------Extending the Tree-----------------")
             id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
             abstract_bt = search.expand_abstract_tree(abstract_bt, id)
             sampled_bt = search.sample_tree(abstract_bt, sample)
@@ -186,7 +186,7 @@ def test():
             break
         time.sleep(1)
 
-
+    sampled_bt.Halt()
     vrep.close_connection()
 
 if __name__ == "__main__":

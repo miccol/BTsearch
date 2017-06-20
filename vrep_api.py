@@ -189,7 +189,7 @@ class vrep_api:
 
     def drop_object(self):
 
-        time.sleep(2)
+        time.sleep(4)
 
         original_position = self.get_position(self.gripper_id,-1)
         new_position = original_position
@@ -232,7 +232,6 @@ class vrep_api:
                 break
     def is_robot_close_2d(self,object_id, threshold):
         position = self.get_position(object_id,self.youbot_ref_id)
-        print('DISTANCE:', np.linalg.norm(position))
         return np.linalg.norm(position) < threshold
 
 
@@ -243,7 +242,8 @@ class vrep_api:
 
     def are_objects_close2d(self,object_1_id,object_2_id,threshold):
         position = self.get_position(object_1_id,object_2_id)
-        position[2] = 0
+        position[1] = position[1]-0.1
+        print('DISTANCE:', np.linalg.norm(position))
 
         return np.linalg.norm(position) < threshold
 

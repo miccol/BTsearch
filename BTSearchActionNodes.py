@@ -72,3 +72,8 @@ class DropObject(ActionNode):
 
         # self.SetStatus(NodeStatus.Success)
         # self.SetColor(NodeColor.Green)
+
+    def Halt(self):
+        if self.GetStatus() == NodeStatus.Running:
+            ActionNode.Halt(self)
+            self.vrep.init_arm()
