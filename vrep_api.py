@@ -49,7 +49,8 @@ class vrep_api:
                                                         vrep.simx_opmode_oneshot_wait)
 
         if error_id:
-            raise Exception('Error! cannot retrive pose of' ,object_id)
+            # raise Exception('Error! cannot retrive pose of' ,object_id)
+            return [0, 0, 0]
         else:
             return position
 
@@ -231,7 +232,6 @@ class vrep_api:
                 break
     def is_robot_close_2d(self,object_id, threshold):
         position = self.get_position(object_id,self.youbot_ref_id)
-        print('distance: ',np.linalg.norm(position) )
         return np.linalg.norm(position) < threshold
 
 

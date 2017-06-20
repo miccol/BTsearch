@@ -3,6 +3,10 @@ sys.path.insert(0, 'bt/')
 from SequenceNode import SequenceNode
 from FallbackNode import FallbackNode
 from NewDraw import new_draw_tree
+
+from ActionTest import ActionTest
+from ConditionTest import ConditionTest
+
 from BTSearchActionNodes import *
 from BTSearchConditionNodes import *
 from search_utils import *
@@ -147,14 +151,29 @@ def test():
     sampled_bt = search.sample_tree(abstract_bt, sample)
     # new_draw_tree(sampled_bt)
 
+
+
+    root_test = FallbackNode('Fallback')
+
+    condition_test = ConditionTest('C')
+    action_test = ActionTest('A')
+
+    root_test.AddChild(condition_test)
+    root_test.AddChild(action_test)
+
     root = SequenceNode('root')
     root.AddChild(sampled_bt)
     draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
     draw_thread.start()
+    #
+    # while True:
+    #     print('Ticking the Tree')
+    #     root_test.Execute(None)
+    #     time.sleep(2)
 
 
     while True:
-        sampled_bt.Halt()
+        print('Ticking the Tree')
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
             input("-----------------Extending the Tree-----------------")
@@ -165,6 +184,7 @@ def test():
         elif sampled_bt.GetStatus() is NodeStatus.Success:
             print('Done!')
             break
+        time.sleep(1)
 
 
     vrep.close_connection()

@@ -7,13 +7,12 @@ class ActionTest(ActionNode):
         ActionNode.__init__(self,name)
 
 
-    def Execute(self):
+    def Execute(self, args):
         self.SetStatus(NodeStatus.Running)
         self.SetColor(NodeColor.Gray)
 
         while self.GetStatus() == NodeStatus.Running:
             #print self.name + ' executing'
-            time.sleep(10)
-
-        self.SetStatus(NodeStatus.Success)
+            print('Running Action')
+            time.sleep(1)
 

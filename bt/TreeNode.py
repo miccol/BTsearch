@@ -52,7 +52,9 @@ class TreeNode:
         return
 
     def Halt(self):
-        self.SetStatus(NodeStatus.Idle)
-        self.SetColor(NodeColor.Black)
+        if self.GetStatus() is not NodeStatus.Idle:
+            print('Node HALTED:', self.name)
+            self.SetStatus(NodeStatus.Idle)
+            self.SetColor(NodeColor.Black)
 
 

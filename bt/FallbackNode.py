@@ -12,9 +12,9 @@ class FallbackNode(ControlNode):
     def Execute(self,args = None):
         #print 'Starting Children Threads'
         self.SetStatus(NodeStatus.Idle)
+        print('Tick Reached the Fallback Node')
 
-
-        while self.GetStatus() != NodeStatus.Success and self.GetStatus() != NodeStatus.Failure:
+        if self.GetStatus() != NodeStatus.Success and self.GetStatus() != NodeStatus.Failure:
             #check if you have to tick a new child or halt the current
             i = 0
             #try:
@@ -26,11 +26,17 @@ class FallbackNode(ControlNode):
 
                     #print 'Executing child ' + c.name
                     #thread.start_new_thread(c.Execute,())
-                    c.Execute(args)
+                    print("SENDING TICK TO:", c.name)
+
+                    if c.nodeType == 'Action':
+                        c.SendTick()
+                    else:
+                        c.Execute(args)
+                    print("TICK SENT TO:", c.name)
                    # print '???' + str(i)
 
                 while c.GetStatus() == NodeStatus.Idle:
-
+                    print("+++++++++++++++++++++++++++********************************+++++++++++++++++WAITING FOR :", c.name)
                     #print 'waiting child ' + c.name + ' thread ' + str(thread.get_ident())
                     time.sleep(0.0001)
                 #print 'child ' + c.name + ' status' + str(c.GetStatus())
