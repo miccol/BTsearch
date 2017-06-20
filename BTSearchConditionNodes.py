@@ -62,7 +62,7 @@ class IsObjectAt(ConditionNode):
 
     def Execute(self, args):
 
-        if self.vrep.are_objects_close(self.fluent.parameters_dict['object'], self.fluent.parameters_dict['at'],0.01):
+        if self.vrep.are_objects_close2d(self.fluent.parameters_dict['object'], self.fluent.parameters_dict['at'],0.1):
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:

@@ -138,11 +138,20 @@ def test():
     # sampled_bt = search.sample_tree(new_abs_tree,{'object': green_cube_id, 'at': goal_id})
     # new_draw_tree(sampled_bt)
 
+
+
     abstract_bt = Fluent('is_cube_at_goal','is_object_at', {'object': green_cube_id, 'at': goal_id})
     # new_draw_tree(abstract_bt)
     sample = {'object': green_cube_id, 'at': goal_id}
     sampled_bt = search.sample_tree(abstract_bt, sample)
     # new_draw_tree(sampled_bt)
+
+    root = SequenceNode('root')
+    root.AddChild(sampled_bt)
+    new_draw_tree(root)
+    draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
+    draw_thread.start()
+
 
     while True:
         sampled_bt.Halt()
@@ -153,21 +162,10 @@ def test():
             # new_draw_tree(abstract_bt)
             sampled_bt = search.sample_tree(abstract_bt, sample)
             # new_draw_tree(sampled_bt)
+        elif sampled_bt.GetStatus() is NodeStatus.Success:
+            print('Done!')
+            break
 
-    return
-    root = SequenceNode('root')
-    root.AddChild(bt)
-    draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
-    draw_thread.start()
-
-    while True:
-        bt.Halt()
-        bt.Execute(None)
-        # new_draw_tree(bt)
-        if bt.GetStatus() is NodeStatus.Failure:
-            bt = search.expand_tree(bt)
-            root.SetChild(0,bt)
-            bt.Halt()
 
 
     vrep.close_connection()

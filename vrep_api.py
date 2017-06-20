@@ -237,3 +237,9 @@ class vrep_api:
 
         return np.linalg.norm(position) < threshold
 
+    def are_objects_close2d(self,object_1_id,object_2_id,threshold):
+        position = self.get_position(object_1_id,object_2_id)
+        position[2] = 0
+
+        return np.linalg.norm(position) < threshold
+
