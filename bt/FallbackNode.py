@@ -14,7 +14,8 @@ class FallbackNode(ControlNode):
         self.SetStatus(NodeStatus.Idle)
         print('Tick Reached the Fallback Node')
 
-        if self.GetStatus() != NodeStatus.Success and self.GetStatus() != NodeStatus.Failure:
+        if True:
+        # if self.GetStatus() != NodeStatus.Success and self.GetStatus() != NodeStatus.Failure:
             #check if you have to tick a new child or halt the current
             i = 0
             #try:
@@ -37,9 +38,8 @@ class FallbackNode(ControlNode):
 
                 while c.GetStatus() == NodeStatus.Idle:
                     print("+++++++++++++++++++++++++++********************************+++++++++++++++++WAITING FOR :", c.name)
-                    #print 'waiting child ' + c.name + ' thread ' + str(thread.get_ident())
-                    time.sleep(0.0001)
-                #print 'child ' + c.name + ' status' + str(c.GetStatus())
+                    time.sleep(0.1)
+                print("The child ", c.name ," has responded")
 
                 if c.GetStatus() == NodeStatus.Running:
                     self.SetStatus(NodeStatus.Running)
@@ -60,7 +60,7 @@ class FallbackNode(ControlNode):
 
 
                 elif c.GetStatus() == NodeStatus.Success:
-                    #c.SetStatus(NodeStatus.Idle)
+                    c.SetStatus(NodeStatus.Idle)
                     self.HaltChildren(i + 1)
                     self.SetStatus(NodeStatus.Success)
                     self.SetColor(NodeColor.Green)
@@ -72,9 +72,5 @@ class FallbackNode(ControlNode):
                 else:
                     raise Exception('Node ' +self.name + ' does not recognize the status of child ' + str(i) +'. (1 is the first)' )
 
-
-
-           # except:
-             #   print 'Error'
 
 

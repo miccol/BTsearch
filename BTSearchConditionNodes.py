@@ -23,7 +23,6 @@ class IsRobotCloseTo(ConditionNode):
             self.SetColor(NodeColor.Green)
         else:
             print("++++++++++++++++the robot is NOT close to", self.fluent.parameters_dict['to'] )
-
             self.SetStatus(NodeStatus.Failure)
             self.SetColor(NodeColor.Red)
 

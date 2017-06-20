@@ -13,9 +13,11 @@ class SequenceNode(ControlNode):
     def Execute(self,args = None):
         #print 'Starting Children Threads'
         self.SetStatus(NodeStatus.Idle)
+        print('Tick Reached the Sequence Node')
 
 
-        if self.GetStatus() != NodeStatus.Success and self.GetStatus() != NodeStatus.Failure:
+        if True:
+        # if self.GetStatus() != NodeStatus.Success and self.GetStatus() != NodeStatus.Failure:
 
             #check if you have to tick a new child or halt the current
             i = 0
@@ -38,6 +40,7 @@ class SequenceNode(ControlNode):
                     print("+++++++++++++++++++++++++++********************************+++++++++++++++++WAITING FOR :",
                           c.name)
                     time.sleep(0.1)
+                print("The child ", c.name ," has responded")
 
 
                 if c.GetStatus() == NodeStatus.Running:
@@ -58,7 +61,7 @@ class SequenceNode(ControlNode):
                             #time.sleep(0.1)
 
                 elif c.GetStatus() == NodeStatus.Failure:
-                    #c.SetStatus(NodeStatus.Idle)
+                    c.SetStatus(NodeStatus.Idle)
                     self.HaltChildren(i + 1)
                     self.SetStatus(NodeStatus.Failure)
                     self.SetColor(NodeColor.Red)

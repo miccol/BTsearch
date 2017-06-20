@@ -232,6 +232,7 @@ class vrep_api:
                 break
     def is_robot_close_2d(self,object_id, threshold):
         position = self.get_position(object_id,self.youbot_ref_id)
+        print('DISTANCE:', np.linalg.norm(position))
         return np.linalg.norm(position) < threshold
 
 
