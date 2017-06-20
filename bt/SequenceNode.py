@@ -25,16 +25,13 @@ class SequenceNode(ControlNode):
             for c in self.Children:
                 i = i + 1
 
-                if c.GetStatus() == NodeStatus.Idle:
-                    #print 'starting tread ' + c.name + ' from thread ' + str(thread.get_ident())
-                    #thread.start_new_thread(c.Execute,())
-                    print("SENDING TICK TO:", c.name)
-                    if c.nodeType == 'Action':
-                        c.SendTick()
-                    else:
-                        c.Execute(args)
-                    print("TICK SENT TO:", c.name)
-                    # print '???' + str(i)
+                print("SENDING TICK TO:", c.name)
+                if c.nodeType == 'Action':
+                    c.SendTick()
+                else:
+                    c.Execute(args)
+                print("TICK SENT TO:", c.name)
+                # print '???' + str(i)
 
                 while c.GetStatus() == NodeStatus.Idle:
                     print("+++++++++++++++++++++++++++********************************+++++++++++++++++WAITING FOR :",
@@ -61,7 +58,9 @@ class SequenceNode(ControlNode):
                             #time.sleep(0.1)
 
                 elif c.GetStatus() == NodeStatus.Failure:
-                    c.SetStatus(NodeStatus.Idle)
+                    if c.nodeClass is not 'Leaf':
+                        c.SetStatus(NodeStatus.Idle)
+
                     self.HaltChildren(i + 1)
                     self.SetStatus(NodeStatus.Failure)
                     self.SetColor(NodeColor.Red)

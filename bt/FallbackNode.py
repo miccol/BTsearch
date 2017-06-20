@@ -22,19 +22,13 @@ class FallbackNode(ControlNode):
             for c in self.Children:
                 i = i + 1
 
-                if c.GetStatus() == NodeStatus.Idle:
-                    #print 'starting tread ' + c.name + ' from thread ' + str(thread.get_ident())
+                print("SENDING TICK TO:", c.name)
 
-                    #print 'Executing child ' + c.name
-                    #thread.start_new_thread(c.Execute,())
-                    print("SENDING TICK TO:", c.name)
-
-                    if c.nodeType == 'Action':
-                        c.SendTick()
-                    else:
-                        c.Execute(args)
-                    print("TICK SENT TO:", c.name)
-                   # print '???' + str(i)
+                if c.nodeType == 'Action':
+                    c.SendTick()
+                else:
+                    c.Execute(args)
+                print("TICK SENT TO:", c.name)
 
                 while c.GetStatus() == NodeStatus.Idle:
                     print("+++++++++++++++++++++++++++********************************+++++++++++++++++WAITING FOR :", c.name)
@@ -60,7 +54,8 @@ class FallbackNode(ControlNode):
 
 
                 elif c.GetStatus() == NodeStatus.Success:
-                    c.SetStatus(NodeStatus.Idle)
+                    if c.nodeClass is not 'Leaf':
+                        c.SetStatus(NodeStatus.Idle)
                     self.HaltChildren(i + 1)
                     self.SetStatus(NodeStatus.Success)
                     self.SetColor(NodeColor.Green)

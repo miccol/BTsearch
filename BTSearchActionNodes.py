@@ -16,19 +16,16 @@ class MoveCloseTo(ActionNode):
         self.vrep = vrep_api
         self.name = name
         self.parameters_dict = parameters_dict
-        print('******************************************Creating Action', self.name)
 
 
     def Execute(self,args):
-        print('******************************************Executing Action', self.name)
         self.SetStatus(NodeStatus.Running)
         self.SetColor(NodeColor.Gray)
-        print('Executing Action', self.name)
         self.vrep.move_close_to_object(self.parameters_dict['to'])
 
         while self.GetStatus() == NodeStatus.Running:
             #print self.name + ' executing'
-            # print('Executing Action', self.name)
+            print('Executing Action', self.name)
             time.sleep(0.1)
         # self.SetStatus(NodeStatus.Success)
         # self.SetColor(NodeColor.Green)
@@ -50,12 +47,11 @@ class GraspObject(ActionNode):
         self.vrep.grasp_object(self.parameters_dict['object'])
         while self.GetStatus() == NodeStatus.Running:
             #print self.name + ' executing'
-            # print('Executing Action', self.name)
+            print('Executing Action', self.name)
             #print('The object grasped is: ', self.vrep.object_grasped_id)
 
             time.sleep(1)
-        # self.SetStatus(NodeStatus.Success)
-        # self.SetColor(NodeColor.Green)
+
 
 class DropObject(ActionNode):
 
