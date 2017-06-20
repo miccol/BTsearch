@@ -44,6 +44,9 @@ class TreeNode:
     def PrintName(self):
         print(self.name)
 
+    def Print(self):
+        print(self.name)
+
     @abstractmethod
     def Execute(self, args):
         return

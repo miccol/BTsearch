@@ -149,26 +149,22 @@ def test():
 
     root = SequenceNode('root')
     root.AddChild(sampled_bt)
-    # draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
-    # draw_thread.start()
+    draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
+    draw_thread.start()
 
 
     while True:
         sampled_bt.Halt()
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
-            print("-----------------Extending the Tree-----------------")
+            input("-----------------Extending the Tree-----------------")
             id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
             abstract_bt = search.expand_abstract_tree(abstract_bt, id)
-            print("-----------------Extended-----------------")
-            abstract_bt.Print()
-            new_draw_tree(abstract_bt)
             sampled_bt = search.sample_tree(abstract_bt, sample)
-            new_draw_tree(sampled_bt)
+            root.SetChild(0,sampled_bt)
         elif sampled_bt.GetStatus() is NodeStatus.Success:
             print('Done!')
             break
-
 
 
     vrep.close_connection()
