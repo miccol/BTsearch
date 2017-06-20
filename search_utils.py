@@ -19,14 +19,20 @@ class SearchUtils:
 
 
     def sample_action_template(self, action_tmpl, parameters_dict):
-
+        new_parameters_dict = copy.deepcopy(parameters_dict)
         action = None
         if action_tmpl.name is 'move_close_to':
-            action = MoveCloseTo('move_close_to_'+str(parameters_dict['to']), parameters_dict, self.vrep)
+            parameters_dict['to'] = parameters_dict['to']
+            new_parameters_dict['to'] = new_parameters_dict['to']
+            action = MoveCloseTo('move_close_to_'+str(new_parameters_dict['to']), new_parameters_dict, self.vrep)
         elif action_tmpl.name is 'grasp':
-            action = GraspObject('grasp_'+str(parameters_dict['object']), parameters_dict, self.vrep)
+            parameters_dict['to'] = parameters_dict['object']
+            new_parameters_dict['to'] = new_parameters_dict['object']
+            action = GraspObject('grasp_'+str(new_parameters_dict['object']), new_parameters_dict, self.vrep)
         elif action_tmpl.name is 'drop':
-            action = DropObject('drop_at_'+str(parameters_dict['at']), parameters_dict, self.vrep)
+            parameters_dict['to'] = parameters_dict['at']
+            new_parameters_dict['to'] = new_parameters_dict['at']
+            action = DropObject('drop_at_'+str(new_parameters_dict['at']), new_parameters_dict, self.vrep)
         else:
             raise Exception('Cannot Sample Action Template ', action_tmpl.name)
 
@@ -50,13 +56,13 @@ class SearchUtils:
 
 
     def sample_fluent(self, fluent, param = None):
-        print('FLUENT', str(fluent.parameters_dict))
+        # print('FLUENT', str(fluent.parameters_dict))
 
         parameters = copy.deepcopy(fluent.parameters_dict)
 
 
         if fluent.type is 'is_robot_close_to':
-            print('TRY: IsRobotCloseTo',str(param))
+            # print('TRY: IsRobotCloseTo',str(param))
             if param:
                 try:
                     parameters['to'] = param['to']
@@ -66,19 +72,19 @@ class SearchUtils:
                     except:
                         parameters['to'] = param['object']
             new_fluent = Fluent(fluent.name,fluent.type, parameters)
-            print('OLD fluent', str(fluent.parameters_dict), 'NEW fluent', str(new_fluent.parameters_dict))
-            print('FOUND: IsRobotCloseTo',str(new_fluent.parameters_dict))
+            # print('OLD fluent', str(fluent.parameters_dict), 'NEW fluent', str(new_fluent.parameters_dict))
+            print('SAMPLE FOR FLUENT', fluent.name, ' FOUND: IsRobotCloseTo',str(new_fluent.parameters_dict))
 
             return IsRobotCloseTo(new_fluent.name, new_fluent, self.vrep)
         elif fluent.type is 'is_object_at':
             if param : parameters['at'] = param['at']
-            print('FOUND: IsObjectAt',str(parameters))
+            print('SAMPLE FOR FLUENT', fluent.name, ' FOUND: IsObjectAt',str(parameters))
             new_fluent = Fluent(fluent.name,fluent.type, parameters)
             return IsObjectAt(new_fluent.name, new_fluent, self.vrep)
         elif fluent.type is 'is_object_grasped':
-            print('TRY: IsObjectGrasped',str(param))
+            # print('TRY: IsObjectGrasped',str(param))
             if param : parameters['object'] = param['object']
-            print('FOUND: IsObjectGrasped',str(parameters))
+            print('SAMPLE FOR FLUENT', fluent.name, ' FOUND: IsObjectGrasped',str(parameters))
             new_fluent = Fluent(fluent.name,fluent.type, parameters)
             return IsObjectGrasped(new_fluent.name, new_fluent, self.vrep)
 
@@ -130,26 +136,43 @@ class SearchUtils:
         bt.AddChild(self.get_abstract_subtree_for(fluent))
 
         return bt
+    #
+    # def get_failed_fluent_id(self,bt, idx = 0):
+    #     if bt.nodeClass is not 'Leaf':
+    #         #search for fluent id
+    #         new_idx = idx
+    #         is_failed = False
+    #         for child in bt.GetChildren():
+    #             new_idx, is_failed = self.get_failed_fluent_id(child, new_idx)
+    #             if is_failed:
+    #                 print('Failing fluent found: ',new_idx)
+    #                 return new_idx, True
+    #         if not is_failed:
+    #             return new_idx + 1, False
+    #
+    #     else:
+    #         if bt.nodeType is 'Condition' and bt.GetStatus() is NodeStatus.Failure:
+    #             print('ID FOUNDDDDDDDDDDDDDDDDDD:', idx, 'name:', bt.name)
+    #             return idx + 1, True
+    #         else:
+    #             return idx + 1, False
 
-    def get_failed_fluent_id(self,bt, idx = 0):
+    def get_failed_fluent_id(self,bt, abstract_bt):
         if bt.nodeClass is not 'Leaf':
             #search for fluent id
-            new_idx = idx
-            is_failed = False
-            for child in bt.GetChildren():
-                new_idx, is_failed = self.get_failed_fluent_id(child, new_idx)
-                if is_failed:
-                    print('Failing fluent found: ',new_idx)
-                    return new_idx, True
-            if not is_failed:
-                return new_idx + 1, False
+            for child_index, child in enumerate(bt.GetChildren()):
+                child_id = self.get_failed_fluent_id(child, abstract_bt.GetChildren()[child_index])
+                if child_id is not -1:
+                    print('Failing fluent id found: ', child_id)
+                    return child_id
+            return -1
 
         else:
             if bt.nodeType is 'Condition' and bt.GetStatus() is NodeStatus.Failure:
-                print('ID FOUNDDDDDDDDDDDDDDDDDD:', idx, 'name:', bt.name)
-                return idx + 1, True
+                print('ID FOUNDDDDDDDDDDDDDDDDDD:', abstract_bt.uuid, 'name:', bt.name)
+                return abstract_bt.uuid
             else:
-                return idx + 1, False
+                return -1
 
 
 
@@ -226,14 +249,17 @@ class SearchUtils:
             #reverse if this is a sequence composition
             if sampled_tree.nodeType is 'Sequence':
                 sampled_tree.ReverseChildren()
+                abstract_tree.ReverseChildren()
                 for index,child in enumerate( sampled_tree.GetChildren()):
-                    sampled_child = self.sample_tree(child, sample)
+                    sampled_child = self.sample_tree(abstract_tree.GetChildren()[index], sample)
                     sampled_tree.SetChild(index,sampled_child)
-                    sampled_tree.ReverseChildren()
+                sampled_tree.ReverseChildren()
+                abstract_tree.ReverseChildren()
+
 
             else:
                 for index,child in enumerate(sampled_tree.GetChildren()):
-                    sampled_child = self.sample_tree(child, sample)
+                    sampled_child = self.sample_tree(abstract_tree.GetChildren()[index], sample)
                     sampled_tree.SetChild(index,sampled_child)
             return sampled_tree
 

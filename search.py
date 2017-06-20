@@ -114,27 +114,45 @@ def test():
     search = SearchUtils(all_action_tmpls, vrep)
 
 
-    is_cube_at_goal_fl = Fluent('is_cube_at_goal','is_object_at', {'object': green_cube_id, 'at': goal_id})
+    # is_cube_at_goal_fl = Fluent('is_cube_at_goal','is_object_at', {'object': green_cube_id, 'at': goal_id})
+    #
+    # abstract_bt = is_cube_at_goal_fl
+    # bt = search.sample_fluent(is_cube_at_goal_fl)
+    #
+    # sampled_bt = search.sample_tree(is_cube_at_goal_fl, {'object': green_cube_id, 'at': goal_id})
+    #
+    # new_draw_tree(sampled_bt)
+    #
+    # new_abs_tree = search.extend_fluent(abstract_bt)
+    # new_draw_tree(new_abs_tree)
+    # sampled_bt = search.sample_tree(new_abs_tree,{'object': green_cube_id, 'at': goal_id})
+    # new_draw_tree(sampled_bt)
+    # sampled_bt.Halt()
+    # sampled_bt.Execute(None)
+    # print('********************Searching for failed fluent:')
+    #
+    # id =  search.get_failed_fluent_id(sampled_bt, new_abs_tree)
+    # print('********************ID:', id)
+    # new_abs_tree = search.expand_abstract_tree(new_abs_tree, id)
+    # new_draw_tree(new_abs_tree)
+    # sampled_bt = search.sample_tree(new_abs_tree,{'object': green_cube_id, 'at': goal_id})
+    # new_draw_tree(sampled_bt)
 
-    abstract_bt = is_cube_at_goal_fl
-    bt = search.sample_fluent(is_cube_at_goal_fl)
+    abstract_bt = Fluent('is_cube_at_goal','is_object_at', {'object': green_cube_id, 'at': goal_id})
+    # new_draw_tree(abstract_bt)
+    sample = {'object': green_cube_id, 'at': goal_id}
+    sampled_bt = search.sample_tree(abstract_bt, sample)
+    # new_draw_tree(sampled_bt)
 
-    sampled_bt = search.sample_tree(is_cube_at_goal_fl, {'object': green_cube_id, 'at': goal_id})
-
-    new_draw_tree(sampled_bt)
-
-    new_abs_tree = search.extend_fluent(abstract_bt)
-    new_draw_tree(new_abs_tree)
-    sampled_bt = search.sample_tree(new_abs_tree,{'object': green_cube_id, 'at': goal_id})
-    new_draw_tree(sampled_bt)
-    sampled_bt.Halt()
-    sampled_bt.Execute(None)
-    id, not_used =  search.get_failed_fluent_id(sampled_bt, 0)
-    print('********************ID:', id)
-    new_draw_tree(new_abs_tree)
-    new_abs_tree = search.expand_abstract_tree(new_abs_tree, id)
-    new_draw_tree(new_abs_tree)
-
+    while True:
+        sampled_bt.Halt()
+        sampled_bt.Execute(None)
+        if sampled_bt.GetStatus() is NodeStatus.Failure:
+            id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
+            abstract_bt = search.expand_abstract_tree(abstract_bt, id)
+            # new_draw_tree(abstract_bt)
+            sampled_bt = search.sample_tree(abstract_bt, sample)
+            # new_draw_tree(sampled_bt)
 
     return
     root = SequenceNode('root')
