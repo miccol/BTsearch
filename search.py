@@ -34,6 +34,7 @@ class Fluent:
         self.nodeType = 'Condition'
         self.nodeClass = 'Leaf'
         self.uuid = uuid.uuid4()
+    def Print(self):
         print('Fluent name:', self.name,'Fluent id:', self.uuid)
 
     def GetColor(self):
@@ -64,16 +65,15 @@ class ActionTemplate:
 
     def GetColor(self):
         return NodeColor.Black
-    def show(self):
+    def Print(self):
         print('Name: ', self.name)
-        print('Parameters: ', self.parameters)
-        print('Conditions: ', self.conditions)
-        print('Effect: ', self.effects)
+        # print('Parameters: ', self.parameters)
+        # print('Conditions: ', self.conditions)
+        # print('Effect: ', self.effects)
 
 def main():
     print('The program has started')
     drop_cube_at = ActionTemplate('DropAt',['cube','p'],['is_cube_grasped','is_close_to_pos'],['is_cube_at'])
-    drop_cube_at.show()
     c = ConditionTest('is_cube_at')
     bt = extend_condition(c,[drop_cube_at])
     new_draw_tree(bt)
@@ -90,13 +90,14 @@ def test():
 
     #fluents
     is_robot_close_to_fl = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
+    is_robot_close_to_fl2 = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
     is_grasped_fl = Fluent('is_object_grasped','is_object_grasped', {'object': 0, 'hand':0})
 
 
 
     move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[],['robot','to'], ConstraintOperativeSubspace(['object','robot'],['','']))
     drop_at_tmpl = ActionTemplate('drop',['object','at'],[is_grasped_fl,is_robot_close_to_fl],['object','at'], ConstraintOperativeSubspace(['p','o'],['']))
-    grasp_tmpl = ActionTemplate('grasp',['object'],[is_robot_close_to_fl],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
+    grasp_tmpl = ActionTemplate('grasp',['object'],[is_robot_close_to_fl2],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
 
 
     all_action_tmpls.append(move_close_to_tmpl)
@@ -148,20 +149,22 @@ def test():
 
     root = SequenceNode('root')
     root.AddChild(sampled_bt)
-    new_draw_tree(root)
-    draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
-    draw_thread.start()
+    # draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
+    # draw_thread.start()
 
 
     while True:
         sampled_bt.Halt()
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
+            print("-----------------Extending the Tree-----------------")
             id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
             abstract_bt = search.expand_abstract_tree(abstract_bt, id)
-            # new_draw_tree(abstract_bt)
+            print("-----------------Extended-----------------")
+            abstract_bt.Print()
+            new_draw_tree(abstract_bt)
             sampled_bt = search.sample_tree(abstract_bt, sample)
-            # new_draw_tree(sampled_bt)
+            new_draw_tree(sampled_bt)
         elif sampled_bt.GetStatus() is NodeStatus.Success:
             print('Done!')
             break

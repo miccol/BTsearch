@@ -33,3 +33,7 @@ class ControlNode(TreeNode):
     def Halt(self):
         self.SetStatus(NodeStatus.Idle)
         self.HaltChildren(1)
+
+    def Print(self):
+        for child in self.Children:
+            child.Print()

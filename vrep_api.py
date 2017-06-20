@@ -224,8 +224,11 @@ class vrep_api:
         print('moving close to object', object_id)
         cip = self.get_closest_inverse_pose(object_id, self.youbot_vehicle_target_id, type)
         self.set_pose(self.youbot_vehicle_target_id, -1, cip)
-
-
+        while True:
+            print('moving close to object', object_id)
+            time.sleep(1)
+            if self.is_robot_close_2d(object_id, 0.32):
+                break
     def is_robot_close_2d(self,object_id, threshold):
         position = self.get_position(object_id,self.youbot_ref_id)
         print('distance: ',np.linalg.norm(position) )

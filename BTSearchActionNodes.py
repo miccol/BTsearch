@@ -44,7 +44,7 @@ class MoveCloseTo(ActionNode):
         self.SetColor(NodeColor.Gray)
         print('Executing Action', self.name)
         self.vrep.move_close_to_object(self.parameters_dict['to'])
-        self.SetStatus(NodeStatus.Failure)
+        self.SetStatus(NodeStatus.Success)
         self.SetColor(NodeColor.Green)
 
 
