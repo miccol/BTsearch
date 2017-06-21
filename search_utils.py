@@ -53,8 +53,6 @@ class SearchUtils:
 
         return action, fluent.parameters_dict
 
-
-
     def sample_fluent(self, fluent, param = None):
         # print('FLUENT', str(fluent.parameters_dict))
 
@@ -87,7 +85,20 @@ class SearchUtils:
             print('SAMPLE FOR FLUENT', fluent.name, ' FOUND: IsObjectGrasped',str(parameters))
             new_fluent = Fluent(fluent.name,fluent.type, parameters)
             return IsObjectGrasped(new_fluent.name, new_fluent, self.vrep)
+        elif fluent.type is 'is_path_to_object_collision_free_fl':
+            # print('TRY: IsObjectGrasped',str(param))
+            if param :
+                try:
+                    parameters['object'] = param['at']
+                except:
+                    try:
+                        parameters['object'] = param['to']
+                    except:
+                            parameters['object'] = param['object']
 
+            print('SAMPLE FOR FLUENT', fluent.name, ' FOUND: IsObjectGrasped',str(parameters))
+            new_fluent = Fluent(fluent.name,fluent.type, parameters)
+            return IsPathToObjectCollisionFree(new_fluent.name, new_fluent, self.vrep)
         raise Exception('Cannot Sample fluent:', fluent.name)
 
 

@@ -15,6 +15,10 @@ import numpy as np
 import time
 import copy
 
+
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+
 class vrep_api:
     def __init__(self):
         vrep.simxFinish(-1)  # just in case, close all opened connections
@@ -28,9 +32,11 @@ class vrep_api:
         self.youbot_vehicle_target_id = self.get_id(b'youBot_vehicleTargetPosition')
         self.youbot_ref_id = self.get_id(b'youBot_vehicleReference')
         self.gripper_id = self.get_id(b'youBot_gripperPositionTarget')
-
+        self.objects_id_list = []
         self.object_grasped_id = None
-
+        self.blue_cube_id = self.get_id(b'blueRectangle')
+        self.yellow_cube_id = self.get_id(b'yellowRectangle')
+        self.objects_id_list.append(self.blue_cube_id)
 
 
     def get_id(self, name):
@@ -107,6 +113,7 @@ class vrep_api:
         print('Connection to remote API server closed')
 
     def is_object_between_poses(self, pose_1, pose_2, offset):
+        #TODO: this is not correct if the youbot moves only sideways
         rectangle_tr_id = self.get_id(b'DiscTopRight')
         rectangle_tl_id = self.get_id(b'DiscTopLeft')
         rectangle_br_id = self.get_id(b'DiscBottomRight')
@@ -117,12 +124,9 @@ class vrep_api:
         rectangle_tl_pose = list(pose_2) #copy
         rectangle_br_pose = list(pose_1) #copy
         rectangle_bl_pose = list(pose_1) #copy
+        rectangle_br_pose[3:6] = rectangle_tr_pose[3:6]
+        rectangle_bl_pose[3:6] = rectangle_tl_pose[3:6]
 
-
-        rectangle_tr_pose[0] += offset
-        rectangle_tl_pose[0] -= offset
-        rectangle_br_pose[0] += offset
-        rectangle_bl_pose[0] -= offset
 
 
         self.set_pose(rectangle_tr_id, -1, rectangle_tr_pose)
@@ -130,11 +134,42 @@ class vrep_api:
         self.set_pose(rectangle_br_id, -1, rectangle_br_pose)
         self.set_pose(rectangle_bl_id, -1, rectangle_bl_pose)
 
+        offset_pose_plus = [offset, 0, 0.1, 0, 0, 0]
+        offset_pose_minus = [-offset, 0, 0.1, 0, 0, 0]
+
+        self.set_pose(rectangle_tr_id, rectangle_tr_id, offset_pose_plus)
+        self.set_pose(rectangle_tl_id, rectangle_tl_id, offset_pose_minus)
+        self.set_pose(rectangle_br_id, rectangle_br_id, offset_pose_plus)
+        self.set_pose(rectangle_bl_id, rectangle_bl_id, offset_pose_minus)
+
+        rectangle_tr_pose = self.get_pose(rectangle_tr_id, -1)
+        rectangle_tl_pose = self.get_pose(rectangle_tl_id, -1)
+        rectangle_br_pose = self.get_pose(rectangle_br_id, -1)
+        rectangle_bl_pose = self.get_pose(rectangle_bl_id,-1)
+
+        polygon = Polygon([(rectangle_tr_pose[0], rectangle_tr_pose[1]), (rectangle_tl_pose[0], rectangle_tl_pose[1]),(rectangle_bl_pose[0], rectangle_bl_pose[1]), (rectangle_br_pose[0], rectangle_br_pose[1])])
+
+
+        for object_id in self.objects_id_list:
+            object_position = self.get_position(object_id, -1)
+            point = Point(object_position[0], object_position[1])
+            if polygon.contains(point):
+                return True, object_id
+        return False, None
+
+
+
+
+
 
     def is_object_between_objects(self, object_1_id, object_2_id, offset):
         object_1_pose = self.get_pose(object_1_id,-1)
         object_2_pose = self.get_pose(object_2_id,-1)
-        self.is_object_between_poses(object_1_pose, object_2_pose, offset)
+        return self.is_object_between_poses(object_1_pose, object_2_pose, offset)
+
+
+    def is_path_to_collision_free(self, object_id):
+        return self.is_object_between_objects(self.youbot_ref_id, object_id, 0.4)
 
 
 

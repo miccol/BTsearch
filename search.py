@@ -103,9 +103,10 @@ def test():
     is_robot_close_to_fl2 = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
     is_grasped_fl = Fluent('is_object_grasped','is_object_grasped', {'object': 0, 'hand':0})
 
+    is_path_to_object_collision_free_fl = Fluent('is_path_to_object_collision_free_fl','is_path_to_object_collision_free_fl', {'path': 0, 'object': 0})
 
 
-    move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[],['robot','to'], ConstraintOperativeSubspace(['object','robot'],['','']))
+    move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[is_path_to_object_collision_free_fl],['robot','to'], ConstraintOperativeSubspace(['object','robot'],['','']))
     drop_at_tmpl = ActionTemplate('drop',['object','at'],[is_grasped_fl,is_robot_close_to_fl],['object','at'], ConstraintOperativeSubspace(['p','o'],['']))
     grasp_tmpl = ActionTemplate('grasp',['object'],[is_robot_close_to_fl2],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
 
@@ -182,7 +183,7 @@ def test():
         print('Ticking the Tree')
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
-            # input("-----------------Extending the Tree-----------------")
+            input("-----------------Extending the Tree-----------------")
             id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
             abstract_bt = search.expand_abstract_tree(abstract_bt, id)
             sampled_bt = search.sample_tree(abstract_bt, sample)
@@ -193,9 +194,11 @@ def test():
         time.sleep(1)
 
     sampled_bt.Halt()
+    sampled_bt.Execute(None)
+
     vrep.close_connection()
 
 if __name__ == "__main__":
     #main()
-    #test()
-    test2()
+    test()
+    # test2()
