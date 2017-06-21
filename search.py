@@ -83,8 +83,14 @@ def main():
     new_draw_tree(bt)
 
 
+def test2():
+    vrep = vrep_api()
 
-
+    green_cube_id = vrep.get_id(b'greenRectangle1')
+    youbot_ref_id = vrep.get_id(b'youBot_backReference')
+    inv_pose = vrep.get_closest_inverse_pose(green_cube_id, youbot_ref_id)
+    youbot_pose = vrep.get_pose(youbot_ref_id,-1)
+    vrep.is_object_between_poses(youbot_pose, inv_pose, 0.4)
 
 def test():
 
@@ -191,4 +197,5 @@ def test():
 
 if __name__ == "__main__":
     #main()
-    test()
+    #test()
+    test2()

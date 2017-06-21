@@ -13,6 +13,7 @@ except:
 import numpy as np
 
 import time
+import copy
 
 class vrep_api:
     def __init__(self):
@@ -26,7 +27,6 @@ class vrep_api:
 
         self.youbot_vehicle_target_id = self.get_id(b'youBot_vehicleTargetPosition')
         self.youbot_ref_id = self.get_id(b'youBot_vehicleReference')
-
         self.gripper_id = self.get_id(b'youBot_gripperPositionTarget')
 
         self.object_grasped_id = None
@@ -105,6 +105,36 @@ class vrep_api:
         vrep.simxFinish(self.clientID)
 
         print('Connection to remote API server closed')
+
+    def is_object_between_poses(self, pose_1, pose_2, offset):
+        rectangle_tr_id = self.get_id(b'DiscTopRight')
+        rectangle_tl_id = self.get_id(b'DiscTopLeft')
+        rectangle_br_id = self.get_id(b'DiscBottomRight')
+        rectangle_bl_id = self.get_id(b'DiscBottomLeft')
+
+
+        rectangle_tr_pose = list(pose_2) #copy
+        rectangle_tl_pose = list(pose_2) #copy
+        rectangle_br_pose = list(pose_1) #copy
+        rectangle_bl_pose = list(pose_1) #copy
+
+
+        rectangle_tr_pose[0] += offset
+        rectangle_tl_pose[0] -= offset
+        rectangle_br_pose[0] += offset
+        rectangle_bl_pose[0] -= offset
+
+
+        self.set_pose(rectangle_tr_id, -1, rectangle_tr_pose)
+        self.set_pose(rectangle_tl_id, -1, rectangle_tl_pose)
+        self.set_pose(rectangle_br_id, -1, rectangle_br_pose)
+        self.set_pose(rectangle_bl_id, -1, rectangle_bl_pose)
+
+
+    def is_object_between_objects(self, object_1_id, object_2_id, offset):
+        object_1_pose = self.get_pose(object_1_id,-1)
+        object_2_pose = self.get_pose(object_2_id,-1)
+        self.is_object_between_poses(object_1_pose, object_2_pose, offset)
 
 
 

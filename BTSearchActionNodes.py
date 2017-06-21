@@ -29,6 +29,7 @@ class MoveCloseTo(ActionNode):
             time.sleep(0.1)
         # self.SetStatus(NodeStatus.Success)
         # self.SetColor(NodeColor.Green)
+        print('MoveCloseTo DONE!!!!!')
 
 
 class GraspObject(ActionNode):
@@ -49,8 +50,9 @@ class GraspObject(ActionNode):
             #print self.name + ' executing'
             print('Executing Action', self.name)
             #print('The object grasped is: ', self.vrep.object_grasped_id)
+            time.sleep(0.1)
+        print('GraspObject DONE!!!!!')
 
-            time.sleep(1)
 
 
 class DropObject(ActionNode):
@@ -69,8 +71,8 @@ class DropObject(ActionNode):
             #print self.name + ' executing'
             print('Executing Action', self.name)
             time.sleep(0.1)
-
-        # self.SetStatus(NodeStatus.Success)
+        print('DropObject DONE!!!!!')
+            # self.SetStatus(NodeStatus.Success)
         # self.SetColor(NodeColor.Green)
 
     def Halt(self):
