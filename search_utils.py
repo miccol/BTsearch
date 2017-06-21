@@ -32,6 +32,7 @@ class SearchUtils:
         elif action_tmpl.name is 'drop':
             parameters_dict['to'] = parameters_dict['at']
             new_parameters_dict['to'] = new_parameters_dict['at']
+
             action = DropObject('drop_at_'+str(new_parameters_dict['at']), new_parameters_dict, self.vrep)
         else:
             raise Exception('Cannot Sample Action Template ', action_tmpl.name)
@@ -56,7 +57,8 @@ class SearchUtils:
     def sample_fluent(self, fluent, param = None):
         # print('FLUENT', str(fluent.parameters_dict))
 
-        parameters = copy.deepcopy(fluent.parameters_dict)
+        # parameters = copy.deepcopy(fluent.parameters_dict)
+        parameters = fluent.parameters_dict
 
 
         if fluent.type is 'is_robot_close_to':
@@ -85,14 +87,14 @@ class SearchUtils:
             print('SAMPLE FOR FLUENT', fluent.name, ' FOUND: IsObjectGrasped',str(parameters))
             new_fluent = Fluent(fluent.name,fluent.type, parameters)
             return IsObjectGrasped(new_fluent.name, new_fluent, self.vrep)
-        elif fluent.type is 'is_path_to_object_collision_free_fl':
+        elif fluent.type is 'is_path_to_object_collision_free':
             # print('TRY: IsObjectGrasped',str(param))
             if param :
                 try:
-                    parameters['object'] = param['at']
+                    parameters['object'] = param['to']
                 except:
                     try:
-                        parameters['object'] = param['to']
+                        parameters['object'] = param['at']
                     except:
                             parameters['object'] = param['object']
 
@@ -129,9 +131,15 @@ class SearchUtils:
                 for c in action.conditions:
                     bt.AddChild(c)
                 bt.AddChild(action)
+
+        if bt is None:
+            raise Exception('Cannot find action with effects', fluent.parameters_dict.keys())
+        return bt
+
         if len(bt.GetChildren()) is 1:
             bt = bt.Children[0]
-        return bt
+
+
 
     def extend_condition(self,condition):
         bt = FallbackNode('Fallback')
@@ -142,9 +150,26 @@ class SearchUtils:
 
 
     def extend_fluent(self,fluent):
+
+        #create new fluent
+
+
+        if fluent.type is 'is_robot_close_to':
+            parameters = {'to': fluent.parameters_dict['to'], 'robot': 0}
+        elif fluent.type is 'is_object_at':
+            parameters = {'at': fluent.parameters_dict['at'], 'object': fluent.parameters_dict['object']}
+        elif fluent.type is 'is_object_grasped':
+            parameters = {'object': fluent.parameters_dict['object'], 'hand': 0}
+        elif fluent.type is 'is_path_to_object_collision_free_fl':
+            parameters = {'object': fluent.parameters_dict['object']}
+        else:
+            raise Exception('Cannot Extend fluent:', fluent.type)
+
+
+        new_fluent = Fluent(fluent.name,fluent.type,parameters)
         bt = FallbackNode('Fallback')
-        bt.AddChild(fluent)
-        bt.AddChild(self.get_abstract_subtree_for(fluent))
+        bt.AddChild(new_fluent)
+        bt.AddChild(self.get_abstract_subtree_for(new_fluent))
 
         return bt
     #
@@ -266,8 +291,6 @@ class SearchUtils:
                     sampled_tree.SetChild(index,sampled_child)
                 sampled_tree.ReverseChildren()
                 abstract_tree.ReverseChildren()
-
-
             else:
                 for index,child in enumerate(sampled_tree.GetChildren()):
                     sampled_child = self.sample_tree(abstract_tree.GetChildren()[index], sample)

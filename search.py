@@ -103,7 +103,7 @@ def test():
     is_robot_close_to_fl2 = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
     is_grasped_fl = Fluent('is_object_grasped','is_object_grasped', {'object': 0, 'hand':0})
 
-    is_path_to_object_collision_free_fl = Fluent('is_path_to_object_collision_free_fl','is_path_to_object_collision_free_fl', {'path': 0, 'object': 0})
+    is_path_to_object_collision_free_fl = Fluent('is_path_to_object_collision_free_fl','is_path_to_object_collision_free', {'path': 0, 'object': 0})
 
 
     move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[is_path_to_object_collision_free_fl],['robot','to'], ConstraintOperativeSubspace(['object','robot'],['','']))
