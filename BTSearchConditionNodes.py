@@ -72,11 +72,10 @@ class IsPathToObjectCollisionFree(ConditionNode):
 
     def Execute(self, args):
         is_collision, object_colliding_id = self.vrep.is_path_to_collision_free(self.fluent.parameters_dict['object'])
+
         if not is_collision:
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:
-            raise Exception('The object:', object_colliding_id, 'is in the way')
-            raise Exception('The object:', object_colliding_id, 'is in the way')
             self.SetStatus(NodeStatus.Failure)
             self.SetColor(NodeColor.Red)

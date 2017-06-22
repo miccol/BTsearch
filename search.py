@@ -118,11 +118,9 @@ def test():
     vrep = vrep_api()
 
     green_cube_id = vrep.get_id(b'greenRectangle1')
-    goal_id = vrep.get_id(b'goalRegion')
+    goal_id = vrep.get_id(b'goalReference')
 
     vrep.open_gripper()
-
-
     search = SearchUtils(all_action_tmpls, vrep)
 
 
@@ -183,10 +181,11 @@ def test():
         print('Ticking the Tree')
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
-            input("-----------------Extending the Tree-----------------")
-            id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
-            abstract_bt = search.expand_abstract_tree(abstract_bt, id)
-            sampled_bt = search.sample_tree(abstract_bt, sample)
+            # input("-----------------Extending the Tree-----------------")
+            # id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
+            sampled_bt = search.expand_tree(sampled_bt)
+            # abstract_bt = search.expand_abstract_tree(abstract_bt, id)
+            # sampled_bt = search.sample_tree(abstract_bt, sample)
             root.SetChild(0,sampled_bt)
         elif sampled_bt.GetStatus() is NodeStatus.Success:
             print('Done!')

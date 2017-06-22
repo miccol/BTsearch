@@ -57,8 +57,8 @@ class SearchUtils:
     def sample_fluent(self, fluent, param = None):
         # print('FLUENT', str(fluent.parameters_dict))
 
-        # parameters = copy.deepcopy(fluent.parameters_dict)
-        parameters = fluent.parameters_dict
+        parameters = copy.deepcopy(fluent.parameters_dict)
+        #parameters = fluent.parameters_dict
 
 
         if fluent.type is 'is_robot_close_to':
@@ -140,12 +140,28 @@ class SearchUtils:
             bt = bt.Children[0]
 
 
-
     def extend_condition(self,condition):
-        bt = FallbackNode('Fallback')
-        bt.AddChild(condition)
-        bt.AddChild(self.get_subtree_for(condition))
 
+        #checking for the special case
+        if condition.fluent.type is 'is_path_to_object_collision_free':
+            #in this case I need to know which object has to be removed
+            _, obstructing_object_id = self.vrep.is_path_to_collision_free(condition.fluent.parameters_dict['object'])
+
+            bt = FallbackNode('Fallback')
+            sub_bt = FallbackNode('Fallback')
+            sample_id_outside_region = self.vrep.get_sample_id_outside_region()
+
+            new_fluent = Fluent('is_object_'+ str(obstructing_object_id) + '_at', 'is_object_at', {'object': obstructing_object_id, 'at': sample_id_outside_region})
+            new_conditon = IsObjectAt(new_fluent.name, new_fluent, self.vrep)
+
+            sub_bt.AddChild(new_conditon)
+            sub_bt.AddChild(self.get_subtree_for(new_conditon))
+            bt.AddChild(condition)
+            bt.AddChild(sub_bt)
+        else:
+            bt = FallbackNode('Fallback')
+            bt.AddChild(condition)
+            bt.AddChild(self.get_subtree_for(condition))
         return bt
 
 
@@ -153,15 +169,29 @@ class SearchUtils:
 
         #create new fluent
 
-
         if fluent.type is 'is_robot_close_to':
             parameters = {'to': fluent.parameters_dict['to'], 'robot': 0}
         elif fluent.type is 'is_object_at':
             parameters = {'at': fluent.parameters_dict['at'], 'object': fluent.parameters_dict['object']}
         elif fluent.type is 'is_object_grasped':
             parameters = {'object': fluent.parameters_dict['object'], 'hand': 0}
-        elif fluent.type is 'is_path_to_object_collision_free_fl':
-            parameters = {'object': fluent.parameters_dict['object']}
+        elif fluent.type is 'is_path_to_object_collision_free':
+            #this is a special case. I need to know which object is obstucting
+            _, obstructing_object_id = self.vrep.is_path_to_collision_free(fluent.parameters_dict['object'])
+            sample_id_outside_region = self.vrep.get_sample_id_outside_region()
+            parameters = {'object': obstructing_object_id, 'at': sample_id_outside_region}
+
+            bt = FallbackNode('Fallback')
+            sub_bt = FallbackNode('Fallback')
+
+            new_fluent = Fluent('is_object_'+ str(obstructing_object_id) + '_at', 'is_object_at', parameters)
+
+            sub_bt.AddChild(new_fluent)
+            sub_bt.AddChild(self.get_abstract_subtree_for(new_fluent))
+            bt.AddChild(fluent)
+            bt.AddChild(sub_bt)
+            return bt
+
         else:
             raise Exception('Cannot Extend fluent:', fluent.type)
 
@@ -274,7 +304,7 @@ class SearchUtils:
     def sample_reachability_graph(self,rg):
         pass
 
-    def sample_tree(self,abstract_tree, sample):
+    def OLDsample_tree(self,abstract_tree, sample):
         sampled_tree = copy.deepcopy(abstract_tree)
         if sampled_tree.__class__.__name__ is 'Fluent':
             return self.sample_fluent(sampled_tree,sample)
@@ -297,6 +327,35 @@ class SearchUtils:
                     sampled_tree.SetChild(index,sampled_child)
             return sampled_tree
 
+    def sample_tree(self,abstract_tree, sample):
+        sampled_tree = copy.deepcopy(abstract_tree)
+        if sampled_tree.__class__.__name__ is 'Fluent':
+            return self.sample_fluent(sampled_tree,sample)
+
+        elif sampled_tree.__class__.__name__ is 'ActionTemplate':
+            return self.sample_action_template(sampled_tree,sample)
+        else:
+            #reverse if this is a sequence composition
+            if sampled_tree.nodeType is 'Sequence':
+                sampled_tree.ReverseChildren()
+                abstract_tree.ReverseChildren()
+                for index,child in enumerate( sampled_tree.GetChildren()):
+                    sampled_child = self.sample_tree(abstract_tree.GetChildren()[index], sample)
+                    sampled_tree.SetChild(index,sampled_child)
+                sampled_tree.ReverseChildren()
+                abstract_tree.ReverseChildren()
+            else:
+                for index,child in enumerate(sampled_tree.GetChildren()):
+                    if child.nodeType is 'Condition':
+                        #i need to get the sample from the condition
+                        filtered_sample = {k: v for k, v in child.parameters_dict.items() if v is not 0}
+                        sample.update(filtered_sample)
+                        sampled_child = self.sample_tree(abstract_tree.GetChildren()[index], sample)
+                        sampled_tree.SetChild(index, sampled_child)
+                    else:
+                        sampled_child = self.sample_tree(abstract_tree.GetChildren()[index], sample)
+                        sampled_tree.SetChild(index,sampled_child)
+            return sampled_tree
 
 
 

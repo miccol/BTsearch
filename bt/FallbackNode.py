@@ -44,14 +44,10 @@ class FallbackNode(ControlNode):
                 elif c.GetStatus() == NodeStatus.Failure:
                     c.SetStatus(NodeStatus.Idle)
 
-
                     if i == len(self.Children):
                         self.SetStatus(NodeStatus.Failure)
                         self.SetColor(NodeColor.Red)
                         break
-                        #while self.GetStatus() != NodeStatus.Idle:
-                            #time.sleep(0.1)
-
 
                 elif c.GetStatus() == NodeStatus.Success:
                     if c.nodeClass is not 'Leaf':
@@ -65,7 +61,7 @@ class FallbackNode(ControlNode):
 
 
                 else:
-                    raise Exception('Node ' +self.name + ' does not recognize the status of child ' + str(i) +'. (1 is the first)' )
+                    raise Exception('Node ' +self.name + ' does not recognize the status of child # ' + str(i) +'. (1 is the first)' )
 
 
 

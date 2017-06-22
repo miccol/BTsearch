@@ -31,12 +31,19 @@ class vrep_api:
 
         self.youbot_vehicle_target_id = self.get_id(b'youBot_vehicleTargetPosition')
         self.youbot_ref_id = self.get_id(b'youBot_vehicleReference')
+        self.youbot_front_ref_id = self.get_id(b'youBot_frontReference')
         self.gripper_id = self.get_id(b'youBot_gripperPositionTarget')
         self.objects_id_list = []
         self.object_grasped_id = None
         self.blue_cube_id = self.get_id(b'blueRectangle')
         self.yellow_cube_id = self.get_id(b'yellowRectangle')
         self.objects_id_list.append(self.blue_cube_id)
+        self.samples_id_list = [self.get_id(b'Disc1'),self.get_id(b'Disc2')]
+
+        self.current_object_goal_id = None
+        self.current_object_to_move_to_goal = None
+
+        self.current_polygon = None
 
 
     def get_id(self, name):
@@ -147,13 +154,13 @@ class vrep_api:
         rectangle_br_pose = self.get_pose(rectangle_br_id, -1)
         rectangle_bl_pose = self.get_pose(rectangle_bl_id,-1)
 
-        polygon = Polygon([(rectangle_tr_pose[0], rectangle_tr_pose[1]), (rectangle_tl_pose[0], rectangle_tl_pose[1]),(rectangle_bl_pose[0], rectangle_bl_pose[1]), (rectangle_br_pose[0], rectangle_br_pose[1])])
+        self.current_polygon = Polygon([(rectangle_tr_pose[0], rectangle_tr_pose[1]), (rectangle_tl_pose[0], rectangle_tl_pose[1]),(rectangle_bl_pose[0], rectangle_bl_pose[1]), (rectangle_br_pose[0], rectangle_br_pose[1])])
 
 
         for object_id in self.objects_id_list:
             object_position = self.get_position(object_id, -1)
             point = Point(object_position[0], object_position[1])
-            if polygon.contains(point):
+            if self.current_polygon.contains(point):
                 return True, object_id
         return False, None
 
@@ -169,6 +176,13 @@ class vrep_api:
 
 
     def is_path_to_collision_free(self, object_id):
+        print('ALLORA: current_object_goal_id = ', self.current_object_goal_id, 'self.current_object_to_move_to_goal = ',self.current_object_to_move_to_goal )
+        if self.current_object_goal_id is object_id and self.current_object_to_move_to_goal is self.object_grasped_id:
+            return False, None
+        if self.object_grasped_id is not None and self.object_grasped_id is not object_id:
+            return True, self.object_grasped_id
+
+
         return self.is_object_between_objects(self.youbot_ref_id, object_id, 0.4)
 
 
@@ -256,12 +270,12 @@ class vrep_api:
 
         time.sleep(4)
 
-        original_position = self.get_position(self.gripper_id,-1)
-        new_position = original_position
-        new_position[1] += 0.1
-        new_position[2] -= 0.1
+        # original_position = self.get_position(self.gripper_id,-1)
+        # new_position = original_position
+        # new_position[1] += 0.1
+        # new_position[2] -= 0.1
 
-        self.set_position(self.gripper_id,-1,new_position)
+        self.set_position(self.gripper_id,-1,[0,0.3,0.1])
 
         time.sleep(2)
         self.open_gripper()
@@ -269,6 +283,8 @@ class vrep_api:
 
         self.init_arm()
         self.object_grasped_id = None
+        self.current_object_goal_id = None
+        self.current_object_to_move_to_goal = None
 
 
 
@@ -287,6 +303,10 @@ class vrep_api:
 
 
     def move_close_to_object(self,object_id, type='cube'):
+
+
+        # if self.object_grasped_id is not None:
+        #     self.current_object_goal_id = object_id
         print('moving close to object', object_id)
         cip = self.get_closest_inverse_pose(object_id, self.youbot_vehicle_target_id, type)
         self.set_pose(self.youbot_vehicle_target_id, -1, cip)
@@ -306,9 +326,23 @@ class vrep_api:
         return np.linalg.norm(position) < threshold
 
     def are_objects_close2d(self,object_1_id,object_2_id,threshold):
+        self.current_object_goal_id = object_2_id
+        self.current_object_to_move_to_goal = object_1_id
         position = self.get_position(object_1_id,object_2_id)
         position[1] = position[1]-0.1
         print('DISTANCE:', np.linalg.norm(position))
 
         return np.linalg.norm(position) < threshold
+
+
+
+    def get_sample_id_outside_region(self):
+        for sample_id in self.samples_id_list:
+            sample_position = self.get_position(sample_id, -1)
+            point = Point(sample_position[0], sample_position[1])
+            if not self.current_polygon.contains(point):
+                return sample_id
+
+        raise Exception('ERROR, there is no sample outside the region')
+
 
