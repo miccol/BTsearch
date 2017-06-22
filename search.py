@@ -102,18 +102,21 @@ def test():
     is_robot_close_to_fl = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
     is_robot_close_to_fl2 = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
     is_grasped_fl = Fluent('is_object_grasped','is_object_grasped', {'object': 0, 'hand':0})
+    is_hand_free_fl = Fluent('is_hand_free','is_hand_free', {'empty': 0, 'hand':0})
 
     is_path_to_object_collision_free_fl = Fluent('is_path_to_object_collision_free_fl','is_path_to_object_collision_free', {'path': 0, 'object': 0})
 
 
     move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[is_path_to_object_collision_free_fl],['robot','to'], ConstraintOperativeSubspace(['object','robot'],['','']))
     drop_at_tmpl = ActionTemplate('drop',['object','at'],[is_grasped_fl,is_robot_close_to_fl],['object','at'], ConstraintOperativeSubspace(['p','o'],['']))
-    grasp_tmpl = ActionTemplate('grasp',['object'],[is_robot_close_to_fl2],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
+    grasp_tmpl = ActionTemplate('grasp',['object'],[is_hand_free_fl, is_robot_close_to_fl2],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
+    ungrasp_tmpl = ActionTemplate('ungrasp',['hand', 'empty'],[],['hand', 'empty'], ConstraintOperativeSubspace(['p','o'],['']))
 
 
     all_action_tmpls.append(move_close_to_tmpl)
     all_action_tmpls.append(drop_at_tmpl)
     all_action_tmpls.append(grasp_tmpl)
+    all_action_tmpls.append(ungrasp_tmpl)
 
     vrep = vrep_api()
 
@@ -181,7 +184,7 @@ def test():
         print('Ticking the Tree')
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
-            # input("-----------------Extending the Tree-----------------")
+            input("-----------------Extending the Tree-----------------")
             # id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
             sampled_bt = search.expand_tree(sampled_bt)
             # abstract_bt = search.expand_abstract_tree(abstract_bt, id)

@@ -38,7 +38,20 @@ class vrep_api:
         self.blue_cube_id = self.get_id(b'blueRectangle')
         self.yellow_cube_id = self.get_id(b'yellowRectangle')
         self.objects_id_list.append(self.blue_cube_id)
-        self.samples_id_list = [self.get_id(b'Disc1'),self.get_id(b'Disc2')]
+        self.objects_id_list.append(self.yellow_cube_id)
+
+        self.samples_id_list = []
+
+        self.samples_id_list.append(self.get_id(b'Disc1'))
+        self.samples_id_list.append(self.get_id(b'Disc2'))
+        self.samples_id_list.append(self.get_id(b'Disc3'))
+        self.samples_id_list.append(self.get_id(b'Disc4'))
+        self.samples_id_list.append(self.get_id(b'Disc5'))
+        self.samples_id_list.append(self.get_id(b'Disc6'))
+        self.samples_id_list.append(self.get_id(b'Disc7'))
+        self.samples_id_list.append(self.get_id(b'Disc8'))
+        self.samples_id_list.append(self.get_id(b'Disc9'))
+        self.samples_id_list.append(self.get_id(b'Disc10'))
 
         self.current_object_goal_id = None
         self.current_object_to_move_to_goal = None
@@ -177,13 +190,16 @@ class vrep_api:
 
     def is_path_to_collision_free(self, object_id):
         print('ALLORA: current_object_goal_id = ', self.current_object_goal_id, 'self.current_object_to_move_to_goal = ',self.current_object_to_move_to_goal )
-        if self.current_object_goal_id is object_id and self.current_object_to_move_to_goal is self.object_grasped_id:
-            return False, None
-        if self.object_grasped_id is not None and self.object_grasped_id is not object_id:
+
+        is_collision, colliding_object = self.is_object_between_objects(self.youbot_ref_id, object_id, 0.4)
+
+        if self.object_grasped_id is not None and self.object_grasped_id is not self.current_object_to_move_to_goal:
             return True, self.object_grasped_id
+        if self.current_object_to_move_to_goal is colliding_object and self.object_grasped_id is colliding_object:
+            return False, None
 
 
-        return self.is_object_between_objects(self.youbot_ref_id, object_id, 0.4)
+        return is_collision, colliding_object
 
 
 
@@ -282,10 +298,33 @@ class vrep_api:
         time.sleep(2)
 
         self.init_arm()
+        time.sleep(2)
+
         self.object_grasped_id = None
         self.current_object_goal_id = None
         self.current_object_to_move_to_goal = None
 
+    def ungrasp_object(self):
+
+        time.sleep(4)
+
+        # original_position = self.get_position(self.gripper_id,-1)
+        # new_position = original_position
+        # new_position[1] += 0.1
+        # new_position[2] -= 0.1
+
+        self.set_position(self.gripper_id,self.gripper_id,[0.2,0.1,-0.1])
+
+        time.sleep(2)
+        self.open_gripper()
+        time.sleep(2)
+
+        self.init_arm()
+        time.sleep(2)
+
+        self.object_grasped_id = None
+        self.current_object_goal_id = None
+        self.current_object_to_move_to_goal = None
 
 
 
@@ -340,8 +379,11 @@ class vrep_api:
         for sample_id in self.samples_id_list:
             sample_position = self.get_position(sample_id, -1)
             point = Point(sample_position[0], sample_position[1])
-            if not self.current_polygon.contains(point):
+            is_collision, colliding_object, = self.is_path_to_collision_free(sample_id)
+            if not is_collision or (is_collision and colliding_object is self.object_grasped_id):
                 return sample_id
+            else:
+                print('Sample', sample_id, 'is in collision with', colliding_object)
 
         raise Exception('ERROR, there is no sample outside the region')
 

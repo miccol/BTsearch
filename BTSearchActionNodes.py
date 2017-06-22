@@ -79,3 +79,29 @@ class DropObject(ActionNode):
         if self.GetStatus() == NodeStatus.Running:
             ActionNode.Halt(self)
             self.vrep.init_arm()
+
+
+
+class UngraspObject(ActionNode):
+
+    def __init__(self,name, vrep_api):
+        ActionNode.__init__(self, name)
+        self.vrep = vrep_api
+
+
+    def Execute(self,args):
+        self.SetStatus(NodeStatus.Running)
+        self.SetColor(NodeColor.Gray)
+        self.vrep.ungrasp_object()
+        while self.GetStatus() == NodeStatus.Running:
+            #print self.name + ' executing'
+            print('Executing Action', self.name)
+            time.sleep(0.1)
+        print('DropObject DONE!!!!!')
+            # self.SetStatus(NodeStatus.Success)
+        # self.SetColor(NodeColor.Green)
+
+    def Halt(self):
+        if self.GetStatus() == NodeStatus.Running:
+            ActionNode.Halt(self)
+            self.vrep.init_arm()

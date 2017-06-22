@@ -49,6 +49,8 @@ class SearchUtils:
             action = GraspObject('grasp_'+str(fluent.parameters_dict['object']), fluent.parameters_dict, self.vrep)
         elif name is 'drop':
             action = DropObject('drop_at_'+str(fluent.parameters_dict['at']), fluent.parameters_dict, self.vrep)
+        elif name is 'ungrasp':
+            action = UngraspObject('ungrasp', self.vrep)
         else:
             raise Exception('Cannot Sample Action', name)
 
@@ -84,6 +86,12 @@ class SearchUtils:
         elif fluent.type is 'is_object_grasped':
             # print('TRY: IsObjectGrasped',str(param))
             if param : parameters['object'] = param['object']
+            print('SAMPLE FOR FLUENT', fluent.name, ' FOUND: IsObjectGrasped',str(parameters))
+            new_fluent = Fluent(fluent.name,fluent.type, parameters)
+            return IsObjectGrasped(new_fluent.name, new_fluent, self.vrep)
+        elif fluent.type is 'is_hand_free':
+            # print('TRY: IsObjectGrasped',str(param))
+            if param : parameters['object'] = None
             print('SAMPLE FOR FLUENT', fluent.name, ' FOUND: IsObjectGrasped',str(parameters))
             new_fluent = Fluent(fluent.name,fluent.type, parameters)
             return IsObjectGrasped(new_fluent.name, new_fluent, self.vrep)
