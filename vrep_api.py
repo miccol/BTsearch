@@ -275,7 +275,7 @@ class vrep_api:
         # new_position[1] += 0.1
         # new_position[2] -= 0.1
 
-        self.set_position(self.gripper_id,-1,[0,0.3,0.1])
+        self.set_position(self.gripper_id,self.gripper_id,[0,0.1,-0.1])
 
         time.sleep(2)
         self.open_gripper()
