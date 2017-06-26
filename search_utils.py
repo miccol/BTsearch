@@ -263,6 +263,7 @@ class SearchUtils:
             print('the node is a fallback', bt.name)
             for index,child in enumerate(bt.GetChildren()):
                 self.expand_tree(child)
+
         return bt #no changes done to this specific node
 
 
@@ -306,37 +307,124 @@ class SearchUtils:
 
 
 
-    def is_tree_feasible(self, tree_to_check, current_conditions_for_tree):
+    def is_tree_feasible_OLD(self, tree_to_check, current_conditions_for_tree):
         #TODO: For now it works only for object grasped.
         is_feasible = True
 
-        for child in tree_to_check.GetChildren():
-            # current_conditions_for_child = copy.deepcopy(current_conditions_for_tree)
-            if child.nodeType is 'Condition':
-                if child.fluent.type is 'is_hand_free':
-                    if 'object_grasped' not in current_conditions_for_tree or current_conditions_for_tree['object_grasped'] is None:
-                        current_conditions_for_tree['object_grasped'] = None
-                    else:
-                        print('Tree Not Feasible:, current_conditions_for_tree[object_grasped]', current_conditions_for_tree['object_grasped'],
-                              'should be None')
-                        return False
-
-                elif child.fluent.type is 'is_object_grasped':
-                    if 'object_grasped' not in current_conditions_for_tree or current_conditions_for_tree['object_grasped'] is child.fluent.parameters_dict['objec_grasped']:
-                        current_conditions_for_tree['object_grasped'] = child.fluent.parameters_dict['object']
-                    else:
-                        print('Tree Not Feasible:, current_conditions_for_tree[object_grasped]', current_conditions_for_tree['object_grasped'],
-                              'child.fluent.parameters_dict[object]', child.fluent.parameters_dict['object'])
-                        return False
-            elif child.nodeType is 'Action':
-                if child.name.startswith('drop_'):
+        # current_conditions_for_child = copy.deepcopy(current_conditions_for_tree)
+        if tree_to_check.nodeType is 'Condition':
+            return True
+            if tree_to_check.fluent.type is 'is_hand_free':
+                if 'object_grasped' not in current_conditions_for_tree or current_conditions_for_tree['object_grasped'] is None:
                     current_conditions_for_tree['object_grasped'] = None
-            else:
+                else:
+                    raise Exception('Tree Not Feasible:, current_conditions_for_tree[object_grasped]', current_conditions_for_tree['object_grasped'],
+                          'should be None')
+                    return False
+
+            elif tree_to_check.fluent.type is 'is_object_grasped':
+                if 'object_grasped' not in current_conditions_for_tree or ('object_grasped' in tree_to_check.fluent.parameters_dict and current_conditions_for_tree['object_grasped'] is tree_to_check.fluent.parameters_dict['object_grasped']):
+                    current_conditions_for_tree['object_grasped'] = tree_to_check.fluent.parameters_dict['object']
+                else:
+                    raise Exception('Tree Not Feasible:, current_conditions_for_tree[object_grasped]', current_conditions_for_tree['object_grasped'],
+                          'child.fluent.parameters_dict[object]', tree_to_check.fluent.parameters_dict['object'])
+                    return False
+        elif tree_to_check.nodeType is 'Action':
+            if tree_to_check.name.startswith('drop_'):
+                current_conditions_for_tree['object_grasped'] = None
+            elif tree_to_check.name.startswith('grasp_'):
+                if 'object_grasped' in current_conditions_for_tree and current_conditions_for_tree['object_grasped'] is not tree_to_check.parameters_dict['object']:
+                    raise Exception('Tree Not Feasible:, current_conditions_for_tree[object_grasped]',
+                                    current_conditions_for_tree['object_grasped'],
+                                    'should be',tree_to_check.C )
+                current_conditions_for_tree['object_grasped'] = tree_to_check.parameters_dict['object']
+        else:
+            for child in tree_to_check.GetChildren():
+                is_child_feasible = self.is_tree_feasible(child, current_conditions_for_tree)
+            if not is_child_feasible:
+                return False
+
+        return is_feasible
+
+    def is_tree_feasible(self, tree_to_check, current_conditions_for_tree):
+        if tree_to_check.nodeType is 'Sequence':
+            for child in tree_to_check.GetChildren():
+                is_child_feasible = self.is_tree_feasible(child, current_conditions_for_tree)
+                if not is_child_feasible:
+                    raise Exception('Tree not feasible: current_conditions', current_conditions_for_tree['hand'],
+                                    'conditions_for_child', conditions_for_child['hand'])
+                    return False
+
+                conditions_for_child = self.get_final_conditions(child)
+                if 'hand' in conditions_for_child and conditions_for_child['hand'] is -1 and \
+                        (current_conditions_for_tree['hand'] is not None and current_conditions_for_tree['hand'] is not -1):
+                    raise Exception('Tree not feasible: current_conditions', current_conditions_for_tree['hand'],
+                                    'conditions_for_child', conditions_for_child['hand'])
+                    return False
+
+
+                current_conditions_for_tree.update(conditions_for_child)
+
+        elif tree_to_check.nodeType is 'Selector':
+            for child in tree_to_check.GetChildren():
                 is_child_feasible = self.is_tree_feasible(child, current_conditions_for_tree)
                 if not is_child_feasible:
                     return False
 
-        return is_feasible
+        return True
+
+
+    def new_is_tree_feasible(self, tree, current_conditions):
+        if tree.nodeType is 'Condition':
+            if tree.fluent.type is 'is_hand_free':
+                if current_conditions['hand'] is None or current_conditions['hand'] is -1:
+                    current_conditions.update({'hand': -1})
+                    return True
+                else:
+                    return False
+            elif tree.fluent.type is 'is_object_grasped':
+                if current_conditions['hand'] is None or current_conditions['hand'] is tree.fluent.parameters_dict['object']:
+                    current_conditions.update({'hand': tree.fluent.parameters_dict['object']})
+                    return True
+                else:
+                    return False
+            else:
+                current_conditions.update({'hand': None})
+                return True
+        elif tree.nodeType is 'Action':
+            return True
+        elif tree.nodeType is 'Selector':
+            return self.new_is_tree_feasible(tree.Children[1], current_conditions)
+
+        else:
+            for child in tree.GetChildren():
+                is_child_feasible = self.new_is_tree_feasible(child, current_conditions)
+                if not is_child_feasible:
+                    return False
+            return True
+
+
+
+    def get_final_conditions(self, tree):
+        if tree.nodeType is 'Condition':
+            if tree.fluent.type is 'is_hand_free':
+                return {'hand': -1}
+            if tree.fluent.type is 'is_object_grasped':
+                return {'hand': tree.fluent.parameters_dict['object']}
+        elif tree.nodeType is 'Action':
+            if tree.name.startswith('drop_'):
+                return {'hand': None}
+            if tree.name.startswith('grasp_'):
+                return {'hand': tree.parameters_dict['object']}
+            # return tree.parameters_dict
+        # elif tree.nodeType is 'Selector':
+        #     return self.get_final_conditions(tree.Children[1])
+        else:
+            conditions = {}
+            for child in tree.GetChildren():
+                conditions.update(self.get_final_conditions(child))
+            return conditions
+        return {}
 
 
     def get_reachability_graph(self,abstract_tree):

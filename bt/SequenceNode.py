@@ -25,19 +25,14 @@ class SequenceNode(ControlNode):
             for c in self.Children:
                 i = i + 1
 
-                print("SENDING TICK TO:", c.name)
                 if c.nodeType == 'Action':
                     c.SendTick()
                 else:
                     c.Execute(args)
-                print("TICK SENT TO:", c.name)
                 # print '???' + str(i)
 
                 while c.GetStatus() == NodeStatus.Idle:
-                    print("+++++++++++++++++++++++++++********************************+++++++++++++++++WAITING FOR :",
-                          c.name)
                     time.sleep(0.1)
-                print("The child ", c.name ," has responded")
 
 
                 if c.GetStatus() == NodeStatus.Running:

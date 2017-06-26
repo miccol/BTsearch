@@ -113,6 +113,7 @@ def test():
     grasp_tmpl = ActionTemplate('grasp',['object'],[is_hand_free_fl, is_robot_close_to_fl2],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
     ungrasp_tmpl = ActionTemplate('ungrasp',['hand', 'empty'],[],['hand', 'empty'], ConstraintOperativeSubspace(['p','o'],['']))
 
+
     #putting action templates in a list
     all_action_tmpls = []
     all_action_tmpls.append(move_close_to_tmpl)
@@ -156,12 +157,16 @@ def test():
         print('Ticking the Tree')
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
-            input("-----------------Extending the Tree-----------------")
+            # input("-----------------Extending the Tree-----------------")
             # id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
             sampled_bt = search.expand_tree(sampled_bt)
+            conditions = {'hand': None}
+            root.SetChild(0, sampled_bt)
+            if not search.new_is_tree_feasible(sampled_bt, conditions):
+                raise Exception('Tree not feasible')
             # abstract_bt = search.expand_abstract_tree(abstract_bt, id)
             # sampled_bt = search.sample_tree(abstract_bt, sample)
-            root.SetChild(0,sampled_bt)
+
         elif sampled_bt.GetStatus() is NodeStatus.Success:
             print('Done!')
             break
