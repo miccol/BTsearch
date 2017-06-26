@@ -95,69 +95,46 @@ def test2():
 def test():
 
 
-    #definition of action templates
-    all_action_tmpls = []
+
 
     #fluents
     is_robot_close_to_fl = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
     is_robot_close_to_fl2 = Fluent('is_robot_close_to','is_robot_close_to', {'robot': 0, 'to': 0})
     is_grasped_fl = Fluent('is_object_grasped','is_object_grasped', {'object': 0, 'hand':0})
     is_hand_free_fl = Fluent('is_hand_free','is_hand_free', {'empty': 0, 'hand':0})
-
     is_path_to_object_collision_free_fl = Fluent('is_path_to_object_collision_free_fl','is_path_to_object_collision_free', {'path': 0, 'object': 0})
 
+
+
+    #definition of action templates
 
     move_close_to_tmpl = ActionTemplate('move_close_to',['object'],[is_path_to_object_collision_free_fl],['robot','to'], ConstraintOperativeSubspace(['object','robot'],['','']))
     drop_at_tmpl = ActionTemplate('drop',['object','at'],[is_grasped_fl,is_robot_close_to_fl],['object','at'], ConstraintOperativeSubspace(['p','o'],['']))
     grasp_tmpl = ActionTemplate('grasp',['object'],[is_hand_free_fl, is_robot_close_to_fl2],['object','hand'], ConstraintOperativeSubspace(['o'],['']))
     ungrasp_tmpl = ActionTemplate('ungrasp',['hand', 'empty'],[],['hand', 'empty'], ConstraintOperativeSubspace(['p','o'],['']))
 
-
+    #putting action templates in a list
+    all_action_tmpls = []
     all_action_tmpls.append(move_close_to_tmpl)
     all_action_tmpls.append(drop_at_tmpl)
     all_action_tmpls.append(grasp_tmpl)
     all_action_tmpls.append(ungrasp_tmpl)
 
+    #creation of the object to communicate with vrep
     vrep = vrep_api()
-
     green_cube_id = vrep.get_id(b'greenRectangle1')
     goal_id = vrep.get_id(b'goalReference')
-
     vrep.open_gripper()
+
+
     search = SearchUtils(all_action_tmpls, vrep)
-
-
-    # is_cube_at_goal_fl = Fluent('is_cube_at_goal','is_object_at', {'object': green_cube_id, 'at': goal_id})
-    #
-    # abstract_bt = is_cube_at_goal_fl
-    # bt = search.sample_fluent(is_cube_at_goal_fl)
-    #
-    # sampled_bt = search.sample_tree(is_cube_at_goal_fl, {'object': green_cube_id, 'at': goal_id})
-    #
-    # new_draw_tree(sampled_bt)
-    #
-    # new_abs_tree = search.extend_fluent(abstract_bt)
-    # new_draw_tree(new_abs_tree)
-    # sampled_bt = search.sample_tree(new_abs_tree,{'object': green_cube_id, 'at': goal_id})
-    # new_draw_tree(sampled_bt)
-    # sampled_bt.Halt()
-    # sampled_bt.Execute(None)
-    # print('********************Searching for failed fluent:')
-    #
-    # id =  search.get_failed_fluent_id(sampled_bt, new_abs_tree)
-    # print('********************ID:', id)
-    # new_abs_tree = search.expand_abstract_tree(new_abs_tree, id)
-    # new_draw_tree(new_abs_tree)
-    # sampled_bt = search.sample_tree(new_abs_tree,{'object': green_cube_id, 'at': goal_id})
-    # new_draw_tree(sampled_bt)
 
 
 
     abstract_bt = Fluent('is_cube_at_goal','is_object_at', {'object': green_cube_id, 'at': goal_id})
-    # new_draw_tree(abstract_bt)
     sample = {'object': green_cube_id, 'at': goal_id}
     sampled_bt = search.sample_tree(abstract_bt, sample)
-    # new_draw_tree(sampled_bt)
+
 
 
 
@@ -173,11 +150,6 @@ def test():
     root.AddChild(sampled_bt)
     draw_thread = threading.Thread(target=new_draw_tree, args=(root,))
     draw_thread.start()
-    #
-    # while True:
-    #     print('Ticking the Tree')
-    #     root_test.Execute(None)
-    #     time.sleep(2)
 
 
     while True:

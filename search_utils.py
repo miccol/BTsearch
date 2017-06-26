@@ -306,6 +306,39 @@ class SearchUtils:
 
 
 
+    def is_tree_feasible(self, tree_to_check, current_conditions_for_tree):
+        #TODO: For now it works only for object grasped.
+        is_feasible = True
+
+        for child in tree_to_check.GetChildren():
+            # current_conditions_for_child = copy.deepcopy(current_conditions_for_tree)
+            if child.nodeType is 'Condition':
+                if child.fluent.type is 'is_hand_free':
+                    if 'object_grasped' not in current_conditions_for_tree or current_conditions_for_tree['object_grasped'] is None:
+                        current_conditions_for_tree['object_grasped'] = None
+                    else:
+                        print('Tree Not Feasible:, current_conditions_for_tree[object_grasped]', current_conditions_for_tree['object_grasped'],
+                              'should be None')
+                        return False
+
+                elif child.fluent.type is 'is_object_grasped':
+                    if 'object_grasped' not in current_conditions_for_tree or current_conditions_for_tree['object_grasped'] is child.fluent.parameters_dict['objec_grasped']:
+                        current_conditions_for_tree['object_grasped'] = child.fluent.parameters_dict['object']
+                    else:
+                        print('Tree Not Feasible:, current_conditions_for_tree[object_grasped]', current_conditions_for_tree['object_grasped'],
+                              'child.fluent.parameters_dict[object]', child.fluent.parameters_dict['object'])
+                        return False
+            elif child.nodeType is 'Action':
+                if child.name.startswith('drop_'):
+                    current_conditions_for_tree['object_grasped'] = None
+            else:
+                is_child_feasible = self.is_tree_feasible(child, current_conditions_for_tree)
+                if not is_child_feasible:
+                    return False
+
+        return is_feasible
+
+
     def get_reachability_graph(self,abstract_tree):
         pass
 
