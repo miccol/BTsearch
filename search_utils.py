@@ -252,35 +252,103 @@ class SearchUtils:
 
 
     def expand_tree(self,bt, root):
+        extended_condition = None
         if bt.nodeType is 'Condition' and bt.GetStatus() is NodeStatus.Failure:
             print('found the condition to expand:', bt.name)
-            return self.extend_condition(bt)
+            extended_condition = self.extend_condition(bt)
+            return extended_condition, extended_condition
         elif bt.nodeType is 'Sequence':
             print('the node is a sequence', bt.name)
             for index,child in enumerate(bt.GetChildren()):
                 # bt_test = copy.deepcopy(bt)
                 # bt_test.SetChild(index,self.expand_tree(child, root))
-                bt.SetChild(index, self.expand_tree(child, root))
+                new_sub_tree, extended_condition = self.expand_tree(child, root)
+                bt.SetChild(index, new_sub_tree)
 
-                if not self.new_is_tree_feasible(bt, {'hand': None}):
-                    # bt.Print()
+                while not self.new_is_tree_feasible(root, {'hand': None}):
                     # input('-------------------------TREE NOT FEASIBLE, INCREASING PRIORITY OF THE NEW SUBTREE--------------')
-                    copy_child = bt.GetChildren()[0]
-                    bt.SetChild(0, bt.GetChildren()[1])
-                    bt.SetChild(1, copy_child)
+                    self.increase_priority(extended_condition, root)
+                    # bt.Print()
+                    # copy_child = bt.GetChildren()[0]
+                    # bt.SetChild(0, bt.GetChildren()[1])
+                    # bt.SetChild(1, copy_child)
                     # new_draw_tree(bt)
-                    # input('-------------------------TREE FEASIBLE--------------')
-                else:
-                    pass
+                # input('-------------------------TREE FEASIBLE--------------')
+
 
 
 
         elif bt.nodeType is 'Selector':
             print('the node is a fallback', bt.name)
             for index,child in enumerate(bt.GetChildren()):
-                self.expand_tree(child, root)
+                _, child_extended_condition = self.expand_tree(child, root)
+                if child_extended_condition is not None:
+                    extended_condition = child_extended_condition
 
-        return bt #no changes done to this specific node
+        return bt, extended_condition #no changes done to this specific node
+
+
+    # def expand_tree(self,bt, root):
+    #     extended_condition = None
+    #     if bt.nodeType is 'Condition' and bt.GetStatus() is NodeStatus.Failure:
+    #         print('found the condition to expand:', bt.name)
+    #         extended_condition = self.extend_condition(bt)
+    #         return extended_condition, extended_condition
+    #     elif bt.nodeType is 'Sequence':
+    #         print('the node is a sequence', bt.name)
+    #         for index,child in enumerate(bt.GetChildren()):
+    #             # bt_test = copy.deepcopy(bt)
+    #             # bt_test.SetChild(index,self.expand_tree(child, root))
+    #             new_sub_tree, extended_condition = self.expand_tree(child, root)
+    #             bt.SetChild(index, new_sub_tree)
+    #
+    #             while not self.new_is_tree_feasible(root, {'hand': None}):
+    #                 # input('-------------------------TREE NOT FEASIBLE, INCREASING PRIORITY OF THE NEW SUBTREE--------------')
+    #                 self.increase_priority(extended_condition, root)
+    #                 # bt.Print()
+    #                 # copy_child = bt.GetChildren()[0]
+    #                 # bt.SetChild(0, bt.GetChildren()[1])
+    #                 # bt.SetChild(1, copy_child)
+    #                 # new_draw_tree(bt)
+    #             # input('-------------------------TREE FEASIBLE--------------')
+    #
+    #
+    #
+    #
+    #     elif bt.nodeType is 'Selector':
+    #         print('the node is a fallback', bt.name)
+    #         for index,child in enumerate(bt.GetChildren()):
+    #             _, child_extended_condition = self.expand_tree(child, root)
+    #             if child_extended_condition is not None:
+    #                 extended_condition = child_extended_condition
+    #
+    #     return bt, extended_condition #no changes done to this specific node
+
+
+
+    def increase_priority(self, tree_to_increase, root, parent = None, index = None):
+        if root.nodeClass is not 'Leaf':
+            for child in root.GetChildren():
+                if child is tree_to_increase:
+                    try:
+                        root.IncreasePriorityOfChild(child)
+                    except:
+                        #one level up
+                        if not index:
+                            root_index = parent.Children.index(root)
+                        else:
+                            root_index = index
+                        root.RemoveChild(child)
+                        parent.AddChild(child, root_index)
+                        # raise Exception('found')
+                    # root.RemoveChild(child)
+                    break
+                else:
+                    if child.nodeType is 'Sequence':
+                        self.increase_priority(tree_to_increase, child, parent, root.Children.index(child) )
+                    elif child.nodeType is 'Selector':
+                        self.increase_priority(tree_to_increase, child, root)
+
 
 
     def expand_abstract_tree(self,bt, id):
@@ -417,7 +485,8 @@ class SearchUtils:
                 current_conditions.update({'hand': tree.parameters_dict['object']})
             return True
         elif tree.nodeType is 'Selector':
-            # self.new_is_tree_feasible(tree.Children[0], current_conditions)
+            # if tree.Children[0].nodeClass is not 'Leaf':
+            #     self.new_is_tree_feasible(tree.Children[0], current_conditions)
             return self.new_is_tree_feasible(tree.Children[1], current_conditions)
             # for child in tree.GetChildren():
             #     is_child_feasible = self.new_is_tree_feasible(child, current_conditions)
