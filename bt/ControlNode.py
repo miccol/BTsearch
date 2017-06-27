@@ -46,7 +46,7 @@ class ControlNode(TreeNode):
                     #print 'Halting Child' + str(c.name)
                     c.Halt()
     def Halt(self):
-        self.SetStatus(NodeStatus.Idle)
+        self.SetStatus(NodeStatus.Halted)
         self.HaltChildren(1)
 
     def Print(self):

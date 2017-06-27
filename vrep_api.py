@@ -15,7 +15,7 @@ import numpy as np
 import time
 import copy
 
-
+from threading import RLock
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
@@ -57,6 +57,9 @@ class vrep_api:
         self.current_object_to_move_to_goal = None
 
         self.current_polygon = None
+
+
+        self.object_grasped_id_lock = RLock()
 
 
     def get_id(self, name):
@@ -212,6 +215,7 @@ class vrep_api:
             z_shift = 0
 
         distance = 10000000000
+        distance = 10000000000
         closest_inverse_pose = None
         dummy_id = self.get_id(b'Disc0')
         shift = 0.3
@@ -282,8 +286,12 @@ class vrep_api:
         self.init_arm()
         self.object_grasped_id = object_id
 
+        time.sleep(2)
+
+
     def drop_object(self):
 
+        self.object_grasped_id_lock.acquire()
         time.sleep(4)
 
         # original_position = self.get_position(self.gripper_id,-1)
@@ -303,8 +311,10 @@ class vrep_api:
         self.object_grasped_id = None
         self.current_object_goal_id = None
         self.current_object_to_move_to_goal = None
+        self.object_grasped_id_lock.release()
 
     def ungrasp_object(self):
+        self.object_grasped_id_lock.acquire()
 
         time.sleep(4)
 
@@ -325,7 +335,12 @@ class vrep_api:
         self.object_grasped_id = None
         self.current_object_goal_id = None
         self.current_object_to_move_to_goal = None
+        self.object_grasped_id_lock.release()
 
+
+    def get_object_grasped_id(self):
+        with self.object_grasped_id_lock:
+            return self.object_grasped_id
 
 
     def init_arm(self):

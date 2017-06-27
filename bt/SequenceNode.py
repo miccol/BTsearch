@@ -23,6 +23,8 @@ class SequenceNode(ControlNode):
             i = 0
             #try:
             for c in self.Children:
+                if self.GetStatus() is NodeStatus.Halted:
+                    break
                 i = i + 1
 
                 if c.nodeType == 'Action':

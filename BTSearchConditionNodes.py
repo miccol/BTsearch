@@ -34,7 +34,7 @@ class IsObjectGrasped(ConditionNode):
         self.fluent = fluent
 
     def Execute(self, args):
-        if  self.vrep.object_grasped_id is self.fluent.parameters_dict['object']:
+        if  self.vrep.get_object_grasped_id() is self.fluent.parameters_dict['object']:
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
         else:

@@ -169,7 +169,7 @@ def test():
         elif sampled_bt.GetStatus() is NodeStatus.Success:
             print('Done!')
             break
-        time.sleep(2)
+        time.sleep(0.2)
 
     sampled_bt.Halt()
     sampled_bt.Execute(None)

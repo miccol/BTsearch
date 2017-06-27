@@ -1,5 +1,5 @@
 class NodeStatus:
-    Success,Failure,Running,Idle = range(4)
+    Success,Failure,Running,Idle, Halted = range(5)
 
 class NodeColor:
     Gray,Red,Green,Black = range(4)
