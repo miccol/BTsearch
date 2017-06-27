@@ -9,7 +9,7 @@ from ConditionTest import ConditionTest
 from BTSearchActionNodes import *
 from BTSearchConditionNodes import *
 from search import Fluent
-
+# from NewDraw import *
 import copy
 
 class SearchUtils:
@@ -251,18 +251,34 @@ class SearchUtils:
 
 
 
-    def expand_tree(self,bt):
+    def expand_tree(self,bt, root):
         if bt.nodeType is 'Condition' and bt.GetStatus() is NodeStatus.Failure:
             print('found the condition to expand:', bt.name)
             return self.extend_condition(bt)
         elif bt.nodeType is 'Sequence':
             print('the node is a sequence', bt.name)
             for index,child in enumerate(bt.GetChildren()):
-                bt.SetChild(index,self.expand_tree(child))
+                # bt_test = copy.deepcopy(bt)
+                # bt_test.SetChild(index,self.expand_tree(child, root))
+                bt.SetChild(index, self.expand_tree(child, root))
+
+                if not self.new_is_tree_feasible(bt, {'hand': None}):
+                    # bt.Print()
+                    # input('-------------------------TREE NOT FEASIBLE, INCREASING PRIORITY OF THE NEW SUBTREE--------------')
+                    copy_child = bt.GetChildren()[0]
+                    bt.SetChild(0, bt.GetChildren()[1])
+                    bt.SetChild(1, copy_child)
+                    # new_draw_tree(bt)
+                    # input('-------------------------TREE FEASIBLE--------------')
+                else:
+                    pass
+
+
+
         elif bt.nodeType is 'Selector':
             print('the node is a fallback', bt.name)
             for index,child in enumerate(bt.GetChildren()):
-                self.expand_tree(child)
+                self.expand_tree(child, root)
 
         return bt #no changes done to this specific node
 
@@ -383,18 +399,31 @@ class SearchUtils:
                 else:
                     return False
             elif tree.fluent.type is 'is_object_grasped':
+                # input('------current_conditions: ' + str(current_conditions['hand']) + ' tree.fluent.parameters_dict: ' + str(tree.fluent.parameters_dict['object']) )
+
                 if current_conditions['hand'] is None or current_conditions['hand'] is tree.fluent.parameters_dict['object']:
                     current_conditions.update({'hand': tree.fluent.parameters_dict['object']})
                     return True
                 else:
                     return False
             else:
-                current_conditions.update({'hand': None})
+                if tree.fluent.type is 'is_object_at':
+                    current_conditions.update({'hand': None})
                 return True
         elif tree.nodeType is 'Action':
+            if tree.name.startswith('drop_'):
+                current_conditions.update({'hand': None})
+            if tree.name.startswith('grasp_'):
+                current_conditions.update({'hand': tree.parameters_dict['object']})
             return True
         elif tree.nodeType is 'Selector':
+            # self.new_is_tree_feasible(tree.Children[0], current_conditions)
             return self.new_is_tree_feasible(tree.Children[1], current_conditions)
+            # for child in tree.GetChildren():
+            #     is_child_feasible = self.new_is_tree_feasible(child, current_conditions)
+                # if not is_child_feasible:
+                #     return False
+            # return is_child_feasible
 
         else:
             for child in tree.GetChildren():
@@ -488,3 +517,22 @@ class SearchUtils:
 
 
 
+
+
+    def make_tree_feasible(self, tree):
+        feasible_tree = copy.deepcopy(tree)
+        if tree.nodeType is 'Sequence':
+            #need to check if I have to change order
+            current_conditions = {'hand': None}
+            if not self.new_is_tree_feasible(tree, current_conditions):
+                feasible_tree.SetChild(0, tree.GetChildren()[1])
+                feasible_tree.SetChild(1, tree.GetChildren()[0])
+                new_current_conditions = {'hand': None}
+                if self.new_is_tree_feasible(feasible_tree, new_current_conditions):
+                    return feasible_tree
+                else:
+                    return tree
+
+                #tree not feasible
+
+        return feasible_tree

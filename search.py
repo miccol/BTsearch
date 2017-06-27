@@ -158,8 +158,7 @@ def test():
         sampled_bt.Execute(None)
         if sampled_bt.GetStatus() is NodeStatus.Failure:
             # input("-----------------Extending the Tree-----------------")
-            # id = search.get_failed_fluent_id(sampled_bt, abstract_bt)
-            sampled_bt = search.expand_tree(sampled_bt)
+            sampled_bt = search.expand_tree(sampled_bt, [])
             conditions = {'hand': None}
             root.SetChild(0, sampled_bt)
             if not search.new_is_tree_feasible(sampled_bt, conditions):
@@ -170,7 +169,7 @@ def test():
         elif sampled_bt.GetStatus() is NodeStatus.Success:
             print('Done!')
             break
-        time.sleep(1)
+        time.sleep(2)
 
     sampled_bt.Halt()
     sampled_bt.Execute(None)

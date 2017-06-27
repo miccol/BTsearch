@@ -35,5 +35,6 @@ class ControlNode(TreeNode):
         self.HaltChildren(1)
 
     def Print(self):
+        print(self.name)
         for child in self.Children:
-            child.Print()
+                child.Print()
