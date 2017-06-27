@@ -396,6 +396,7 @@ class vrep_api:
             point = Point(sample_position[0], sample_position[1])
             is_collision, colliding_object, = self.is_path_to_collision_free(sample_id)
             if not is_collision or (is_collision and colliding_object is self.object_grasped_id):
+                self.samples_id_list.remove(sample_id)
                 return sample_id
             else:
                 print('Sample', sample_id, 'is in collision with', colliding_object)
