@@ -263,7 +263,8 @@ class SearchUtils:
                 # bt_test = copy.deepcopy(bt)
                 # bt_test.SetChild(index,self.expand_tree(child, root))
                 new_sub_tree, extended_condition = self.expand_tree(child, root)
-                bt.SetChild(index, new_sub_tree)
+                if extended_condition:
+                    bt.SetChild(index, new_sub_tree)
 
                 while not self.new_is_tree_feasible(root, {'hand': None}):
                     # input('-------------------------TREE NOT FEASIBLE, INCREASING PRIORITY OF THE NEW SUBTREE--------------')
@@ -276,7 +277,7 @@ class SearchUtils:
                 # input('-------------------------TREE FEASIBLE--------------')
 
 
-
+                extended_condition = None
 
         elif bt.nodeType is 'Selector':
             print('the node is a fallback', bt.name)
