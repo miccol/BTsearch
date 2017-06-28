@@ -6,21 +6,21 @@ class ConditionTest(ConditionNode):
 
     def __init__(self,name):
         ConditionNode.__init__(self,name)
-        self.i = 0
+        self.value = True
 
 
     def Execute(self, args):
-        x = 10
-        if self.i < x:
-            self.i = self.i + 1
-            self.SetStatus(NodeStatus.Failure)
-            self.SetColor(NodeColor.Red)
-            print ('checking ' + str(self.name) + ' FAILURE:', self.i )
-        else:
+
+        if self.value:
             self.SetStatus(NodeStatus.Success)
             self.SetColor(NodeColor.Green)
+            print('Condition Success')
+        else:
+            self.SetStatus(NodeStatus.Failure)
+            self.SetColor(NodeColor.Red)
+            print('Condition Failed')
 
-            print ('checking ' + str(self.name) + ' SUCCESS')
 
-
-
+    def set_value(self, value):
+        print('Setting value to', value)
+        self.value = value

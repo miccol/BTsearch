@@ -42,12 +42,12 @@ class ControlNode(TreeNode):
         for c in self.Children:
             i = i + 1
             if i >= h:
-                if c.GetStatus != NodeStatus.Idle:
+                if c.GetStatus() != NodeStatus.Idle:
                     #print 'Halting Child' + str(c.name)
                     c.Halt()
     def Halt(self):
-        self.SetStatus(NodeStatus.Halted)
-        self.HaltChildren(1)
+        self.SetStatus(NodeStatus.Idle)
+        self.HaltChildren(0)
 
     def Print(self):
         print(self.name)

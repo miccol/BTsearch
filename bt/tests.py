@@ -1,47 +1,64 @@
-from SequenceNode import *
-from FallbackNode import *
+import unittest
+from BehaviorTree import *
 from ActionTest import *
 from ConditionTest import *
-from Draw import *
-from BehaviorTree import *
-
-try:
-    # for Python2
-    import thread
-except ImportError:
-    # for Python3
-    import threading
-
-s1 = FallbackNode('s1')
-s2 = SequenceNode('s2')
-
-a1 = ActionTest('Action1')
-a2 = ActionTest('Action2')
-a3 = ActionTest('Action3')
-a4 = ActionTest('Action4')
-
-c1 = ConditionTest('Condition1')
-c2 = ConditionTest('c2')
-
-s1.AddChild(c1)
-s1.AddChild(a1)
 
 
-s1.AddChild(a4)
+class TestBT(unittest.TestCase):
 
-s2.AddChild(c2)
-s2.AddChild(s1)
 
-r = BehaviorTree(s2, 10)
+    def test_simple_sequence(self):
 
-try:
-    # for Python2
-    thread.start_new_thread(r.Execute,())
-except NameError:
-    # for Python3
-    threading._start_new_thread(r.Execute,())
 
-draw_tree(s2)
 
-print('done')
+        root = SequenceNode('Seq')
+        action = ActionTest('Action')
+        condition = ConditionTest('Condition')
 
+        root.AddChild(condition)
+        root.AddChild(action)
+
+        root.Execute(None)
+
+        self.assertEqual(action.GetStatus(), NodeStatus.Running)
+        condition.set_value(False)
+        self.assertEqual(action.GetStatus(), NodeStatus.Running)
+        root.Execute(None)
+        self.assertEqual(action.GetStatus(), NodeStatus.Halted)
+        condition.set_value(True)
+        self.assertEqual(action.GetStatus(), NodeStatus.Halted)
+        root.Execute(None)
+        self.assertEqual(action.GetStatus(), NodeStatus.Running)
+        condition.set_value(False)
+        root.Execute(None)
+        self.assertEqual(action.GetStatus(), NodeStatus.Halted)
+        action.is_destroyed = True
+
+
+    def test_simple_fallback(self):
+
+
+        root = FallbackNode('Fal')
+        action = ActionTest('Action')
+        condition = ConditionTest('Condition')
+        condition.set_value(False)
+
+
+        root.AddChild(condition)
+        root.AddChild(action)
+
+        root.Execute(None)
+
+        self.assertEqual(action.GetStatus(), NodeStatus.Running)
+        condition.set_value(True)
+        self.assertEqual(action.GetStatus(), NodeStatus.Running)
+        root.Execute(None)
+        self.assertEqual(action.GetStatus(), NodeStatus.Halted)
+        condition.set_value(False)
+        self.assertEqual(action.GetStatus(), NodeStatus.Halted)
+        root.Execute(None)
+        self.assertEqual(action.GetStatus(), NodeStatus.Running)
+        condition.set_value(True)
+        root.Execute(None)
+        self.assertEqual(action.GetStatus(), NodeStatus.Halted)
+        action.is_destroyed = True

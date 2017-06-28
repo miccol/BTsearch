@@ -28,6 +28,7 @@ class SequenceNode(ControlNode):
                 i = i + 1
 
                 if c.nodeType == 'Action':
+                    print('Sending Tick to Action')
                     c.SendTick()
                 else:
                     c.Execute(args)
@@ -61,6 +62,15 @@ class SequenceNode(ControlNode):
                     self.HaltChildren(i + 1)
                     self.SetStatus(NodeStatus.Failure)
                     self.SetColor(NodeColor.Red)
+                    break
+
+                elif c.GetStatus() == NodeStatus.Halted:
+                    if c.nodeClass is not 'Leaf':
+                        c.SetStatus(NodeStatus.Halted)
+
+                    self.HaltChildren(i + 1)
+                    # self.SetStatus(NodeStatus.Halted)
+                    # self.SetColor(NodeColor.Black)
 
                     #while self.GetStatus() != NodeStatus.Idle:
                     #       time.sleep(0.1)
@@ -68,7 +78,8 @@ class SequenceNode(ControlNode):
                     break
 
                 else:
-                    raise Exception('Node ' +self.name + ' does not recognize the status of child ' + str(i) +'. (1 is the first)' )
+                    pass
+                    # raise Exception('Node ' +self.name + ' does not recognize the status of child named: ' + self.Children[i-1].name)
         #print 'SEQUENCE DONE'
 
 

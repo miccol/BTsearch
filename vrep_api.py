@@ -192,7 +192,6 @@ class vrep_api:
 
 
     def is_path_to_collision_free(self, object_id):
-        print('ALLORA: current_object_goal_id = ', self.current_object_goal_id, 'self.current_object_to_move_to_goal = ',self.current_object_to_move_to_goal )
 
         is_collision, colliding_object = self.is_object_between_objects(self.youbot_ref_id, object_id, 0.4)
 
@@ -290,56 +289,53 @@ class vrep_api:
 
 
     def drop_object(self):
+        with self.object_grasped_id_lock:
+            time.sleep(4)
 
-        self.object_grasped_id_lock.acquire()
-        time.sleep(4)
+            # original_position = self.get_position(self.gripper_id,-1)
+            # new_position = original_position
+            # new_position[1] += 0.1
+            # new_position[2] -= 0.1
 
-        # original_position = self.get_position(self.gripper_id,-1)
-        # new_position = original_position
-        # new_position[1] += 0.1
-        # new_position[2] -= 0.1
+            self.set_position(self.gripper_id,self.gripper_id,[0,0.1,-0.1])
 
-        self.set_position(self.gripper_id,self.gripper_id,[0,0.1,-0.1])
+            time.sleep(2)
+            self.open_gripper()
+            time.sleep(2)
 
-        time.sleep(2)
-        self.open_gripper()
-        time.sleep(2)
+            self.init_arm()
+            time.sleep(2)
 
-        self.init_arm()
-        time.sleep(2)
-
-        self.object_grasped_id = None
-        self.current_object_goal_id = None
-        self.current_object_to_move_to_goal = None
-        self.object_grasped_id_lock.release()
+            self.object_grasped_id = None
+            self.current_object_goal_id = None
+            self.current_object_to_move_to_goal = None
 
     def ungrasp_object(self):
-        self.object_grasped_id_lock.acquire()
+        with self.object_grasped_id_lock:
+            time.sleep(4)
 
-        time.sleep(4)
+            # original_position = self.get_position(self.gripper_id,-1)
+            # new_position = original_position
+            # new_position[1] += 0.1
+            # new_position[2] -= 0.1
 
-        # original_position = self.get_position(self.gripper_id,-1)
-        # new_position = original_position
-        # new_position[1] += 0.1
-        # new_position[2] -= 0.1
+            self.set_position(self.gripper_id,self.gripper_id,[0.2,0.1,-0.1])
 
-        self.set_position(self.gripper_id,self.gripper_id,[0.2,0.1,-0.1])
+            time.sleep(2)
+            self.open_gripper()
+            time.sleep(2)
 
-        time.sleep(2)
-        self.open_gripper()
-        time.sleep(2)
+            self.init_arm()
+            time.sleep(2)
 
-        self.init_arm()
-        time.sleep(2)
-
-        self.object_grasped_id = None
-        self.current_object_goal_id = None
-        self.current_object_to_move_to_goal = None
-        self.object_grasped_id_lock.release()
+            self.object_grasped_id = None
+            self.current_object_goal_id = None
+            self.current_object_to_move_to_goal = None
 
 
     def get_object_grasped_id(self):
         with self.object_grasped_id_lock:
+            print('*+*+*++**+*+**+*+*++*+**+**+*+*+*+*++*+* The object grasped is:', self.object_grasped_id)
             return self.object_grasped_id
 
 
@@ -384,7 +380,7 @@ class vrep_api:
         self.current_object_to_move_to_goal = object_1_id
         position = self.get_position(object_1_id,object_2_id)
         position[1] = position[1]-0.1
-        print('DISTANCE:', np.linalg.norm(position))
+        print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++DISTANCE:', np.linalg.norm(position))
 
         return np.linalg.norm(position) < threshold
 

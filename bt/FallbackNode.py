@@ -55,11 +55,23 @@ class FallbackNode(ControlNode):
                     self.SetColor(NodeColor.Green)
                     break
 
+                elif c.GetStatus() == NodeStatus.Halted:
+                    if c.nodeClass is not 'Leaf':
+                        c.SetStatus(NodeStatus.Halted)
 
+                    self.HaltChildren(i + 1)
+                    # self.SetStatus(NodeStatus.Halted)
+                    # self.SetColor(NodeColor.Black)
+
+                    #while self.GetStatus() != NodeStatus.Idle:
+                    #       time.sleep(0.1)
+                    #print 'Failure'  + str(i)
+                    break
 
 
                 else:
-                    raise Exception('Node ' +self.name + ' does not recognize the status of child # ' + str(i) +'. (1 is the first)' )
+                    pass
+                    # raise Exception('Node ' +self.name + ' does not recognize the status of child # ' + str(i) +'. (1 is the first)' )
 
 
 

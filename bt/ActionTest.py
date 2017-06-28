@@ -12,7 +12,6 @@ class ActionTest(ActionNode):
         self.SetColor(NodeColor.Gray)
 
         while self.GetStatus() == NodeStatus.Running:
-            #print self.name + ' executing'
             print('Running Action')
-            time.sleep(1)
+            time.sleep(0.1)
 

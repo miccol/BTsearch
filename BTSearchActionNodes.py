@@ -27,8 +27,7 @@ class MoveCloseTo(ActionNode):
             #print self.name + ' executing'
             print('Executing Action', self.name)
             time.sleep(0.1)
-        # self.SetStatus(NodeStatus.Success)
-        # self.SetColor(NodeColor.Green)
+
         print('MoveCloseTo DONE!!!!!')
 
 
@@ -46,11 +45,13 @@ class GraspObject(ActionNode):
         self.SetStatus(NodeStatus.Running)
         self.SetColor(NodeColor.Gray)
         self.vrep.grasp_object(self.parameters_dict['object'])
-        while self.GetStatus() == NodeStatus.Running:
-            #print self.name + ' executing'
-            print('Executing Action', self.name)
-            #print('The object grasped is: ', self.vrep.object_grasped_id)
-            time.sleep(0.1)
+        # while self.GetStatus() == NodeStatus.Running:
+        #     #print self.name + ' executing'
+        #     print('Executing Action', self.name)
+        #     #print('The object grasped is: ', self.vrep.object_grasped_id)
+        #     time.sleep(0.1)
+        self.SetStatus(NodeStatus.Success)
+        self.SetColor(NodeColor.Green)
         print('GraspObject DONE!!!!!')
 
 
@@ -67,13 +68,13 @@ class DropObject(ActionNode):
         self.SetStatus(NodeStatus.Running)
         self.SetColor(NodeColor.Gray)
         self.vrep.drop_object()
-        while self.GetStatus() == NodeStatus.Running:
-            #print self.name + ' executing'
-            print('Executing Action', self.name)
-            time.sleep(0.1)
+        # while self.GetStatus() == NodeStatus.Running:
+        #     #print self.name + ' executing'
+        #     print('Executing Action', self.name)
+        #     time.sleep(0.1)
         print('DropObject DONE!!!!!')
-            # self.SetStatus(NodeStatus.Success)
-        # self.SetColor(NodeColor.Green)
+        self.SetStatus(NodeStatus.Success)
+        self.SetColor(NodeColor.Green)
 
     def Halt(self):
         if self.GetStatus() == NodeStatus.Running:
@@ -93,13 +94,13 @@ class UngraspObject(ActionNode):
         self.SetStatus(NodeStatus.Running)
         self.SetColor(NodeColor.Gray)
         self.vrep.ungrasp_object()
-        while self.GetStatus() == NodeStatus.Running:
-            #print self.name + ' executing'
-            print('Executing Action', self.name)
-            time.sleep(0.1)
+        # while self.GetStatus() == NodeStatus.Running:
+        #     #print self.name + ' executing'
+        #     print('Executing Action', self.name)
+        #     time.sleep(0.1)
         print('DropObject DONE!!!!!')
-            # self.SetStatus(NodeStatus.Success)
-        # self.SetColor(NodeColor.Green)
+        self.SetStatus(NodeStatus.Success)
+        self.SetColor(NodeColor.Green)
 
     def Halt(self):
         if self.GetStatus() == NodeStatus.Running:
