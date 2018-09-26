@@ -22,7 +22,7 @@ from shapely.geometry.polygon import Polygon
 class vrep_api:
     def __init__(self):
         vrep.simxFinish(-1)  # just in case, close all opened connections
-        self.clientID = vrep.simxStart(b'127.0.0.1', 19999, True, True, 5000, 5)  # Connect to V-REP
+        self.clientID = vrep.simxStart(b'127.0.0.1', 19997, True, True, 5000, 5)  # Connect to V-REP
         if self.clientID != -1:
             print('Connected to remote API server')
 
